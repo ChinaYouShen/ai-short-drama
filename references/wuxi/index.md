@@ -24,6 +24,8 @@
 | 修真仙侠（御剑、结印、阵图） | [catalog/xianxia.md](catalog/xianxia.md) |
 | 异能超能（机制、外骨骼、代号） | [catalog/superpower.md](catalog/superpower.md) |
 | 原创体系（商用安全，照结构自造） | [catalog/original.md](catalog/original.md) |
+| 分类太多怎么问、怎么退回上一层 | [catalog/select.md](catalog/select.md) |
+| 金庸十五部作品 · 全部带特效的武功 | [catalog/jinyong/index.md](catalog/jinyong/index.md) |
 
 ## 按需读取模块
 

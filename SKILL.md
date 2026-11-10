@@ -35,7 +35,7 @@ metadata:
 2. **戏型**：
    - `文戏`：对白、关系、情绪、表演和叙事推进为主。读取 [references/wenxi.md](references/wenxi.md) 和 [references/wenxi/index.md](references/wenxi/index.md)，再按用户诉求调用对应模块。
    - `武戏`：对抗、追逐、格斗、兵器、能力和空间调度为主。读取 [references/wuxi.md](references/wuxi.md)。
-   - `必杀技`：带招式名、有喊招、有法相或场域的大招，按五种范式单独处理。武戏先定体系（东方武侠／神话神系／修真仙侠／异能超能／原创自定义），分类见 [references/wuxi/catalog/index.md](references/wuxi/catalog/index.md)，再读 [references/wuxi/ultimate/index.md](references/wuxi/ultimate/index.md) 判范式。
+   - `必杀技`：带招式名、有喊招、有法相或场域的大招，按五种范式单独处理。武戏先定体系（东方武侠／神话神系／修真仙侠／异能超能／原创自定义），分类见 [references/wuxi/catalog/index.md](references/wuxi/catalog/index.md)，再读 [references/wuxi/ultimate/index.md](references/wuxi/ultimate/index.md) 判范式。分类选项多时**不要一次性全列出**：按体系→门派→作品→招式逐层问，每层最多 5 个选项，并明确告诉用户可以「返回」上一层；处置规则见 [references/wuxi/catalog/select.md](references/wuxi/catalog/select.md)。
    - 同一段同时包含文戏和武戏时，先按动作或叙事转折拆成独立段落，分别套用两套规则；即使用户要求同场交错，也要保留“文戏段”和“武戏段”标签，不混写成一套动作规则。
 3. **生成方式**：
    - `文生视频`：T2VA，无参考图、视频或音频作为生成依据。
