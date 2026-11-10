@@ -81,6 +81,8 @@
 | 法相怎么显形、怎么跟手、怎么消散 | [aura.md](aura.md) |
 | 主色辅色高光暖点怎么配 | [palette.md](palette.md) |
 | 连打怎么表示、命中怎么反馈、怎么收尾 | [finisher.md](finisher.md) |
+| 一整套武学（十几招）怎么挑、怎么连 | [forms.md](forms.md) |
+| 降龙十八掌的十八招参数、三掌连段与单掌成品 | [cases/xianglong.md](cases/xianglong.md) |
 | 圣斗士星矢各角色招式的范式与参数 | [cases/saint-seiya.md](cases/saint-seiya.md) |
 | 天马流星拳的完整逐镜样板与提示词 | [cases/pegasus-meteor.md](cases/pegasus-meteor.md) |
 
@@ -95,3 +97,4 @@
 - 命中反馈至少两项；收尾停在最高点，法相已消散。
 - 没有写「无数拳」「漫天拳影」这类不可生成的概括。
 - 同人四条边界逐条对过，没有拿原作截图当参考。
+- 一套多招武学：是否只用了 3～5 招、三层预算对得上、相邻两招没有复位动作，按 [forms.md](forms.md) 的体系级检查过一遍。

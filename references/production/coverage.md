@@ -1,6 +1,6 @@
 # 能力覆盖清单
 
-以下 50 项均有可调用模块；同类规则经过重新组织，语言和版式作为用户可选项。编号仅用于核对能力范围，不代表执行顺序。
+以下 52 项均有可调用模块；同类规则经过重新组织，语言和版式作为用户可选项。编号仅用于核对能力范围，不代表执行顺序。
 
 1. 创作故事大纲 → [outline.md](outline.md)
 2. 对照原文检查大纲 → [outline.md](outline.md)
@@ -52,5 +52,7 @@
 48. 必杀技结构与五种范式 → [../wuxi/ultimate/index.md](../wuxi/ultimate/index.md)
 49. 法相显形·同步·消散与配色槽位 → [../wuxi/ultimate/aura.md](../wuxi/ultimate/aura.md)、[../wuxi/ultimate/palette.md](../wuxi/ultimate/palette.md)
 50. 角色招式参数库与逐镜样板 → [../wuxi/ultimate/cases/saint-seiya.md](../wuxi/ultimate/cases/saint-seiya.md)
+51. 多招武学的体系编排与连段 → [../wuxi/ultimate/forms.md](../wuxi/ultimate/forms.md)
+52. 成套掌法的全谱参数与单掌成品 → [../wuxi/ultimate/cases/xianglong.md](../wuxi/ultimate/cases/xianglong.md)
 
 每次只加载当前产物需要的模块；用户可以跳过列表中的任何阶段。
