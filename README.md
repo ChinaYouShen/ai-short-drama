@@ -9,6 +9,13 @@
 
 > 本技能只负责**内容整理与提示词生产**，不负责上传素材、调用 API、实际生成图片或视频、剪辑与成片验收，这部分交给外部工作流。
 
+## 作者与来源
+
+- 作者：[**酉神**](https://space.bilibili.com/429513806?spm_id_from=333.1007.0.0)（B 站：酉神已退休）
+- 武戏模块的思路参考自 B 站 UP 主 [**黄色大宝剑**](https://space.bilibili.com/296119304?spm_id_from=333.337.0.0)，此处仅借鉴其创作思路并重新整理成结构化规则，特此致谢；如涉及其原创内容权益，请联系作者处理。
+- 作者的其他作品（B 站）：[小说转短剧](https://www.bilibili.com/video/BV1KGnP6VE3X/?vd_source=ffbe4e3e8cfc219ba76f5897625a9887) · [抖音场控](https://www.bilibili.com/video/BV1v7G96CE3H/?vd_source=ffbe4e3e8cfc219ba76f5897625a9887) · [AI 小说过检测](https://www.bilibili.com/video/BV1ydA7zUEuB/?vd_source=ffbe4e3e8cfc219ba76f5897625a9887)
+- 感谢所有在短剧、漫剧与 AI 视频提示词领域公开分享经验的中文创作者。
+
 ## 目录结构
 
 ```
@@ -102,13 +109,6 @@ ai-short-drama/
 | 打包进你自己的产品对外分发 | 该产品涉及本项目的部分需按 GPL-3.0 开源 |
 
 不提供任何担保。若你需要闭源商用集成，请另行联系作者获取商业授权。
-
-## 致谢
-
-- 作者：[**酉神**](https://space.bilibili.com/429513806?spm_id_from=333.1007.0.0)（B 站：酉神已退休）
-- 武戏模块的思路参考自 B 站 UP 主 [**黄色大宝剑**](https://space.bilibili.com/296119304?spm_id_from=333.337.0.0)，此处仅借鉴其创作思路并重新整理成结构化规则，特此致谢；如涉及其原创内容权益，请联系作者处理。
-- 作者的其他作品（B 站）：[小说转短剧](https://www.bilibili.com/video/BV1KGnP6VE3X/?vd_source=ffbe4e3e8cfc219ba76f5897625a9887) · [抖音场控](https://www.bilibili.com/video/BV1v7G96CE3H/?vd_source=ffbe4e3e8cfc219ba76f5897625a9887) · [AI 小说过检测](https://www.bilibili.com/video/BV1ydA7zUEuB/?vd_source=ffbe4e3e8cfc219ba76f5897625a9887)
-- 感谢所有在短剧、漫剧与 AI 视频提示词领域公开分享经验的中文创作者。
 
 ## 贡献
 
