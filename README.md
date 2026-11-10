@@ -30,11 +30,15 @@ ai-short-drama/
 │   ├── deepseek-harness.md     # DeepSeek Harness
 │   ├── doubao.md               # 豆包
 │   └── wenxin.md               # 文心一言
+├── templates/
+│   └── continuity-ledger.md    # 多集作品的连续性台账模板（伏笔·人物·道具·规则）
+├── scripts/
+│   └── validate.py             # 交付自检：时间码·发声窗口·编号绑定·景别枚举
 └── references/
     ├── triggers.md             # 触发词与各平台写法
-    ├── cinematography.md       # 运镜与景别规范
+    ├── cinematography.md       # 景别·运镜·焦距与稳定性
     ├── h3-format.md            # MiniMax H3 字段与参考标签规范
-    ├── optimization.md         # 已有提示词的优化流程
+    ├── optimization.md         # 已有提示词的优化流程与不可生成写法清单
     ├── production/             # 选题·大纲·人物·场景·道具·站位·剧本·分镜·图片·漫剧
     ├── wenxi/                  # 文戏：对白·表演·关系·多人调度·风格·分镜
     └── wuxi/                   # 武戏：招式·位移·兵器·能力·连续性·分镜

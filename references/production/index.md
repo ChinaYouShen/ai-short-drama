@@ -26,5 +26,7 @@
 | 新建、补充、修改或检查短剧分镜 | [storyboard.md](storyboard.md) |
 | 人物、道具、场景、站位、分镜静帧图片提示词 | [images/index.md](images/index.md) |
 | MiniMax H3 文戏或武戏视频提示词 | [../h3-format.md](../h3-format.md) 和对应戏型索引 |
+| 多集作品的跨集连续性台账 | [../../templates/continuity-ledger.md](../../templates/continuity-ledger.md) |
+| 交付前机器自检 | [../../scripts/validate.py](../../scripts/validate.py) |
 
 选题、大纲、剧本、资产、分镜和图片提示词都是可选阶段。用户可直接给一份剧本要求 H3 提示词，也可只生成一张角色设定图提示词，不必先完成其他阶段。
