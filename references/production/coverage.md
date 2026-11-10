@@ -1,6 +1,6 @@
 # 能力覆盖清单
 
-以下 47 项均有可调用模块；同类规则经过重新组织，语言和版式作为用户可选项。编号仅用于核对能力范围，不代表执行顺序。
+以下 50 项均有可调用模块；同类规则经过重新组织，语言和版式作为用户可选项。编号仅用于核对能力范围，不代表执行顺序。
 
 1. 创作故事大纲 → [outline.md](outline.md)
 2. 对照原文检查大纲 → [outline.md](outline.md)
@@ -49,5 +49,8 @@
 45. 同一场景的多角度提示词润色 → [images/polish.md](images/polish.md)
 46. 跨集连续性台账（伏笔·人物·道具·规则四账） → [../../templates/continuity-ledger.md](../../templates/continuity-ledger.md)
 47. 交付前机器自检（时间码·发声窗口·编号绑定·景别枚举） → [../../scripts/validate.py](../../scripts/validate.py)
+48. 必杀技结构与五种范式 → [../wuxi/ultimate/index.md](../wuxi/ultimate/index.md)
+49. 法相显形·同步·消散与配色槽位 → [../wuxi/ultimate/aura.md](../wuxi/ultimate/aura.md)、[../wuxi/ultimate/palette.md](../wuxi/ultimate/palette.md)
+50. 角色招式参数库与逐镜样板 → [../wuxi/ultimate/cases/saint-seiya.md](../wuxi/ultimate/cases/saint-seiya.md)
 
 每次只加载当前产物需要的模块；用户可以跳过列表中的任何阶段。
