@@ -1,6 +1,6 @@
 # 能力覆盖清单
 
-以下 53 项均有可调用模块；同类规则经过重新组织，语言和版式作为用户可选项。编号仅用于核对能力范围，不代表执行顺序。
+以下 54 项均有可调用模块；同类规则经过重新组织，语言和版式作为用户可选项。编号仅用于核对能力范围，不代表执行顺序。
 
 1. 创作故事大纲 → [outline.md](outline.md)
 2. 对照原文检查大纲 → [outline.md](outline.md)
@@ -55,5 +55,6 @@
 51. 多招武学的体系编排与连段 → [../wuxi/ultimate/forms.md](../wuxi/ultimate/forms.md)
 52. 成套掌法的全谱参数与单掌成品 → [../wuxi/ultimate/cases/xianglong.md](../wuxi/ultimate/cases/xianglong.md)
 53. 逐招特效与可直接粘贴的提示词片段 → [../wuxi/ultimate/cases/xianglong.md](../wuxi/ultimate/cases/xianglong.md)
+54. 武戏的体系分类与单选（六大类·门派阵营·四步搭新体系） → [../wuxi/catalog/index.md](../wuxi/catalog/index.md)
 
 每次只加载当前产物需要的模块；用户可以跳过列表中的任何阶段。

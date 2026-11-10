@@ -82,6 +82,7 @@
 | 主色辅色高光暖点怎么配 | [palette.md](palette.md) |
 | 连打怎么表示、命中怎么反馈、怎么收尾 | [finisher.md](finisher.md) |
 | 一整套武学（十几招）怎么挑、怎么连 | [forms.md](forms.md) |
+| 先确认这是第几套体系、什么门派或阵营 | [../catalog/index.md](../catalog/index.md) |
 | 降龙十八掌的十八招参数、三掌连段与单掌成品 | [cases/xianglong.md](cases/xianglong.md) |
 | 圣斗士星矢各角色招式的范式与参数 | [cases/saint-seiya.md](cases/saint-seiya.md) |
 | 天马流星拳的完整逐镜样板与提示词 | [cases/pegasus-meteor.md](cases/pegasus-meteor.md) |

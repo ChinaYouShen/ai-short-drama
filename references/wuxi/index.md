@@ -10,6 +10,21 @@
 
 动作载体、战斗人数和分镜方式都可以跳过。跳过时按用户已有动作或分镜直接处理，不自动添加载体、人数、招式、结果或镜头类型。
 
+## 先定体系，再定招式
+
+武戏按「哪一套武学」分六大类：东方武侠、神话神系、修真仙侠、异能超能、原创自定义。分类总表、体系内的小分类（门派与阵营）和单选方式见 [catalog/index.md](catalog/index.md)。
+
+体系决定能量层长什么样（真气、神力、灵炁、异能），技术参数（范式、时长、光形）照旧共用。**不要在没定体系的情况下直接调招式卡**，否则色板与法相会串味。
+
+| 用户选择 | 读取文件 |
+| --- | --- |
+| 先看有什么分类、怎么单选 | [catalog/index.md](catalog/index.md) |
+| 东方武侠（真气、掌风、门派） | [catalog/wuxia.md](catalog/wuxia.md) |
+| 神话神系（小宇宙、法相、喊招） | [catalog/mythos.md](catalog/mythos.md) |
+| 修真仙侠（御剑、结印、阵图） | [catalog/xianxia.md](catalog/xianxia.md) |
+| 异能超能（机制、外骨骼、代号） | [catalog/superpower.md](catalog/superpower.md) |
+| 原创体系（商用安全，照结构自造） | [catalog/original.md](catalog/original.md) |
+
 ## 按需读取模块
 
 用户要求必杀技、大招、喊招式、法相、能量特效、招式还原时，先读 [ultimate/index.md](ultimate/index.md) 判范式，再按其中路由取模块；必杀技以外的普通武戏不走这条。
