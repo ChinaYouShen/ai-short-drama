@@ -1,0 +1,7 @@
+interface:
+  display_name: "AI生成短剧技能包"
+  short_description: "按需创建短剧、漫剧、资产、分镜及 H3 文武戏提示词"
+  default_prompt: "使用 $ai-short-drama，识别我想要的阶段或产物；我可以用 /AI生成短剧，或直接指定选题、大纲、人物、资产、剧本、分镜、图片提示词、漫剧或 H3 文武戏提示词，也可以跳过阶段、只检查或只修改字段。只询问会造成错误的缺项，并按当前请求输出结果。"
+
+policy:
+  allow_implicit_invocation: true
