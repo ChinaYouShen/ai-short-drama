@@ -4,7 +4,7 @@
 
 - 许可证：**GPL-3.0** —— 可自由商用，但修改后分发必须同样以 GPL-3.0 开源
 - 语言：简体中文
-- 作者：酉神（B 站：酉神已退休）
+- 作者：[酉神](https://space.bilibili.com/429513806?spm_id_from=333.1007.0.0)（B 站：酉神已退休）
 - 适配：Codex / Cursor / DeepSeek Harness / 豆包 / 文心一言
 
 > 本技能只负责**内容整理与提示词生产**，不负责上传素材、调用 API、实际生成图片或视频、剪辑与成片验收，这部分交给外部工作流。
@@ -105,8 +105,9 @@ ai-short-drama/
 
 ## 致谢
 
-- 作者：**酉神**（B 站：酉神已退休）
-- 武戏模块的思路参考自 B 站 UP 主 **黄色大宝剑**，此处仅借鉴其创作思路并重新整理成结构化规则，特此致谢；如涉及其原创内容权益，请联系作者处理。
+- 作者：[**酉神**](https://space.bilibili.com/429513806?spm_id_from=333.1007.0.0)（B 站：酉神已退休）
+- 武戏模块的思路参考自 B 站 UP 主 [**黄色大宝剑**](https://space.bilibili.com/296119304?spm_id_from=333.337.0.0)，此处仅借鉴其创作思路并重新整理成结构化规则，特此致谢；如涉及其原创内容权益，请联系作者处理。
+- 作者的其他作品（B 站）：[小说转短剧](https://www.bilibili.com/video/BV1KGnP6VE3X/?vd_source=ffbe4e3e8cfc219ba76f5897625a9887) · [抖音场控](https://www.bilibili.com/video/BV1v7G96CE3H/?vd_source=ffbe4e3e8cfc219ba76f5897625a9887) · [AI 小说过检测](https://www.bilibili.com/video/BV1ydA7zUEuB/?vd_source=ffbe4e3e8cfc219ba76f5897625a9887)
 - 感谢所有在短剧、漫剧与 AI 视频提示词领域公开分享经验的中文创作者。
 
 ## 贡献
