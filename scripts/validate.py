@@ -62,8 +62,10 @@ BASE_FIELDS = ["integrated_multimodal_description", "overall_soundscape", "non_d
 REF_FIELDS = ["subject_definitions", "summary", "retention_analysis",
               "detailed_description", "overall_soundscape", "non_diegetic_music"]
 REF_FIELDS_ZH = ["主体定义", "摘要", "保留分析", "详细描述", "整体声景", "非叙事配乐"]
+# 段起点只认「正文时间线」的字段。主体定义/摘要/保留分析属于同一段的头部，
+# 不是新段的开始；把它们列进来会把中文六段误拆成两段（见 --self-test 用例）。
 SEGMENT_START_PATTERNS = ["integrated_multimodal_description:", "detailed_description:",
-                          "subject_definitions:", "详细描述:", "主体定义:"]
+                          "详细描述:"]
 
 # 刻意全不给光的门（正文不得出现发光、光晕、光形）
 NO_LIGHT_METHODS = ["打狗棒法", "空明拳", "太极拳", "玄铁剑法", "独孤九剑", "庖丁解牛掌",
@@ -116,21 +118,32 @@ def parse_tc(tc):
     raise ValueError("时间码格式不对: %r" % tc)
 
 
+BODY_PATTERNS = ["[Shot", "详细描述", "detailed_description", "integrated_multimodal_description"]
+
+
 def split_segments(text):
     """按段起始字段切分。
 
     H3 允许把一条连续剧情拆成多组输出，每组从 00:00.000 重新起算，
     所以时间码、镜号、镜长、段长、台词容量都必须逐段判，不能全篇连起来算。
+
+    只有「当前段已经装了正文时间线」时才允许开新段：主体定义、摘要、保留分析
+    是段的头部，不能各自成为一段，否则中文六段会被切成若干空段。
     """
     segs = []
     cur = []
+    has_body = False
     for line in text.splitlines():
         stripped = line.strip()
-        if any(stripped.startswith(p) for p in SEGMENT_START_PATTERNS) and cur:
+        if (any(stripped.startswith(p) for p in SEGMENT_START_PATTERNS)
+                and cur and has_body):
             segs.append("\n".join(cur))
             cur = [line]
+            has_body = any(p in line for p in BODY_PATTERNS)
         else:
             cur.append(line)
+            if any(p in line for p in BODY_PATTERNS):
+                has_body = True
     if cur:
         segs.append("\n".join(cur))
     return segs or [text]
@@ -195,7 +208,10 @@ def check_segment(seg, idx, method):
                 % (idx, tcs[0], MIN_CUT_SECONDS))
         else:
             ok("P3 时间码", "第%d段 %d 个 At 时间码递增正常，起点 %s" % (idx, len(tcs), tcs[0]))
-        durations = [b - a for a, b in zip(vals, vals[1:])] if vals[0] == 0 else list(vals)
+        # 首镜可以不写 At：此时切点列表的第一个 At 就是第二镜起点，1 号镜从 0 秒算起。
+        # 首镜写了 At 00:00.000 时同样成立，两种情况统一补上 0 点再连差。
+        starts = vals if (vals and vals[0] == 0) else [0.0] + vals
+        durations = [b - a for a, b in zip(starts, starts[1:])]
 
     bad_du = []
     for i, d in enumerate(durations):
@@ -557,6 +573,13 @@ non_diegetic_music:
         ("无光门写光晕必须拦下",
          "integrated_multimodal_description:\n本段总长约 6 秒。剑身泛起冷白光晕。\n[Shot 1] At 00:00.000, 近景。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          "独孤九剑", "P17 无光门", None),
+        ("首镜不写 At 时镜长按切点递推，不得从 0 秒重算",
+         "integrated_multimodal_description:\n本段总长约 15 秒。\n[Shot 1] 开场。\n[Shot 2] At 00:03.200, 切。\n[Shot 3] At 00:07.400, 再切。\n[Shot 4] At 00:11.600, 收。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, None,
+         lambda r: not any(l == "FAIL" and ("P7" in g or "P12" in g or "P8" in g) for l, g, _ in r)),
+        ("中文六段不得被「主体定义」拆成两段",
+         "主体定义:\n<Subject 1> 男子。\n摘要:\nx\n保留分析:\ny\n详细描述:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:03.000, 特写。\n整体声景:\nx\n非叙事配乐:\ny",
+         None, None, lambda r: not any("第2段" in msg for _, _, msg in r)),
     ]
     for name, bad_text, method, expect_gate, expect_clean in cases:
         RESULT.clear()
