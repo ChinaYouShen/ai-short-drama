@@ -77,6 +77,11 @@ NO_WARM_METHODS = ["蛤蟆功", "五毒神掌", "玄冥神掌", "化功大法", 
 WARM_WORDS = ["暖色", "暖点", "暖光", "暖白", "暖黄", "赤金", "橙红", "橙黄", "火花"]
 # 法相比例区间
 FAXIANG_RATIO_RANGE = (1.2, 1.5)
+# 语言码必须是完整语言名；这些短码模型侧不认
+SHORT_LANG_CODES = {"zh", "en", "ja", "jp", "cn", "kr", "ko", "fr", "de", "es", "ru",
+                    "eng", "chi", "chs", "cht", "yue", "cmn"}
+# 音频保留关系（用了 <Audio N> 就必须在保留分析里有一行账）
+AUDIO_RETENTION = ["fully_copy", "partially_copy", "reference", "weak_reference"]
 
 RESULT = []
 
@@ -475,13 +480,19 @@ def check_prompt(text, names, method=None):
     elif open_count:
         ok("P6 台词标签", "%d 组台词标签成对闭合" % open_count)
 
-    # 6. 台词组必须带语言码：<d>[zh] 原文</d>
+    # 6. 台词组必须带语言码，且语言码写完整语言名：<d>[Chinese] 原文</d>
     bodies = re.findall(r"<d(?:[^>]*)>(.*?)</d>", text, re.S)
+    codes = [b.strip().split("]")[0].lstrip("[") for b in bodies
+             if re.match(r"^\[[^\]]+\]", b.strip())]
     nolang = [b.strip()[:18] for b in bodies if not re.match(r"^\[[A-Za-z][A-Za-z-]*\]", b.strip())]
+    shorts = [c for c in codes if c.strip().lower() in SHORT_LANG_CODES]
     if nolang:
         bad("P14 语言码", "%d 组台词缺 <d>[语言] 语言码：%s" % (len(nolang), "；".join(nolang[:3])))
+    elif shorts:
+        bad("P14 语言码", "语言码要写完整语言名（Chinese、English、Japanese…），短码模型侧不认：%s"
+            % "、".join(sorted(set(shorts))))
     elif bodies:
-        ok("P14 语言码", "%d 组台词都带语言码" % len(bodies))
+        ok("P14 语言码", "%d 组台词都带完整语言名" % len(bodies))
 
     # 7. 说话人编号按首次发声顺序分配 (S1)(S2)…
     labels = re.findall(r"\(S(\d+)\)", text)
@@ -506,6 +517,33 @@ def check_prompt(text, names, method=None):
         else:
             ok("P13 说话人", "无台词，跳过说话人编号")
 
+    # 8. 音频账：用了 <Audio N> 就必须在保留分析里有一条带保留关系的记录
+    aud_nums = sorted({int(n) for n in re.findall(r"<Audio\s+(\d+)>", text)})
+    if aud_nums:
+        ledger = [ln for ln in text.splitlines() if any(k in ln for k in AUDIO_RETENTION)]
+        unledged = [n for n in aud_nums
+                    if not any(re.search(r"<Audio\s+%d>" % n, ln) for ln in ledger)]
+        if unledged:
+            bad("P19 音频账", "<Audio %s> 在保留分析里没有对应行；音频必须写清用在哪个主体、"
+                "保留关系是 fully_copy／partially_copy／reference／weak_reference"
+                % "、".join(str(n) for n in unledged))
+        else:
+            ok("P19 音频账", "%d 条音频都写了保留关系" % len(aud_nums))
+
+    # 9. 图片绑定：用了 <Picture N> 就必须在同一行写明它对应哪个 <Subject N>
+    pic_nums = sorted({int(n) for n in re.findall(r"<Picture\s+(\d+)>", text)})
+    if pic_nums:
+        unbound = [n for n in pic_nums
+                   if not any(re.search(r"<Picture\s+%d>" % n, ln)
+                              and re.search(r"<Subject\s+\d+>", ln)
+                              for ln in text.splitlines())]
+        if unbound:
+            bad("P20 图片绑定", "<Picture %s> 没写明对应哪个 <Subject N>；每张图都要有一句"
+                "「<Subject N> 取 <Picture M> 的外形／空间／站位」，不许按上传顺序默认配对"
+                % "、".join(str(n) for n in unbound))
+        else:
+            ok("P20 图片绑定", "%d 张图都写明了绑定对象" % len(pic_nums))
+
 
 def self_test():
     data = {
@@ -520,7 +558,7 @@ def self_test():
     prompt = """integrated_multimodal_description:
 本段总长约 7 秒。
 [Shot 1] At 00:00.000, A middle-aged man in a grey robe stands by the door.
-(S1) 中年男子，声音低：<d>[zh] 你早就知道了。</d>
+(S1) 中年男子，声音低：<d>[Chinese] 你早就知道了。</d>
 [Shot 2] At 00:03.000, a close-up of a young woman's wrist.
 overall_soundscape:
 门外雨声。
@@ -559,7 +597,7 @@ non_diegetic_music:
          "integrated_multimodal_description:\n本段总长约 9.5 秒。\n[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:03.000, 特写。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          None, "P12 末镜长", None),
         ("有台词没 (S1) 必须拦下",
-         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\n<d>[zh] 你回来了。</d>\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\n<d>[Chinese] 你回来了。</d>\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          None, "P13 说话人", None),
         ("<d> 缺语言码必须拦下",
          "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\n(S1) 女子：<d>你回来了。</d>\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
@@ -573,6 +611,15 @@ non_diegetic_music:
         ("无光门写光晕必须拦下",
          "integrated_multimodal_description:\n本段总长约 6 秒。剑身泛起冷白光晕。\n[Shot 1] At 00:00.000, 近景。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          "独孤九剑", "P17 无光门", None),
+        ("语言码写短码 zh 必须拦下",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\n(S1) 男子：<d>[zh] 你回来了。</d>\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P14 语言码", None),
+        ("<Audio 1> 在保留分析里没账必须拦下",
+         "subject_definitions:\n<Subject 1> 男子，取 <Picture 1> 外形，<Audio 1> 音色。\nsummary:\nreference generation。\nretention_analysis:\n<Subject 1> partially_preserved：出场。\n<Picture 1> partially_preserved：外形。\ndetailed_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P19 音频账", None),
+        ("<Picture 1> 没写绑定对象必须拦下",
+         "subject_definitions:\n<Subject 1> 男子，深灰长衫。\nsummary:\nreference generation。\nretention_analysis:\n<Subject 1> partially_preserved：出场。\ndetailed_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景，<Picture 1> 里的人物走入。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P20 图片绑定", None),
         ("首镜不写 At 时镜长按切点递推，不得从 0 秒重算",
          "integrated_multimodal_description:\n本段总长约 15 秒。\n[Shot 1] 开场。\n[Shot 2] At 00:03.200, 切。\n[Shot 3] At 00:07.400, 再切。\n[Shot 4] At 00:11.600, 收。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          None, None,

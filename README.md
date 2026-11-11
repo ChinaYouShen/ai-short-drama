@@ -31,7 +31,8 @@ ai-short-drama/
 │   ├── doubao.md               # 豆包
 │   └── wenxin.md               # 文心一言
 ├── templates/
-│   └── continuity-ledger.md    # 多集作品的连续性台账模板（伏笔·人物·道具·规则）
+│   ├── continuity-ledger.md    # 多集作品的连续性台账模板（伏笔·人物·道具·规则）
+│   └── reference-manifest.md   # 参考素材清单模板（图·音频·视频的编号与绑定）
 ├── scripts/
 │   └── validate.py             # 交付自检：字段·时间码·镜长·末镜·单段15秒·台词·主色·法相·编号·景别
 └── references/
