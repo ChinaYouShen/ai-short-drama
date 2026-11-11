@@ -48,7 +48,7 @@
 44. 角色空间占位图润色 → [images/polish.md](images/polish.md)
 45. 同一场景的多角度提示词润色 → [images/polish.md](images/polish.md)
 46. 跨集连续性台账（伏笔·人物·道具·规则四账） → [../../templates/continuity-ledger.md](../../templates/continuity-ledger.md)
-47. 交付前机器自检（时间码·镜长·单段 15 秒·台词容量·编号绑定·景别枚举） → [../../scripts/validate.py](../../scripts/validate.py)
+47. 交付前机器自检（字段结构·时间码·单镜与末镜时长·单段 15 秒·台词容量与语言码·说话人编号·主色唯一·法相比例·门派禁区·编号绑定·景别枚举） → [../../scripts/validate.py](../../scripts/validate.py)
 48. 必杀技结构与五种范式 → [../wuxi/ultimate/index.md](../wuxi/ultimate/index.md)
 49. 法相显形·同步·消散与配色槽位 → [../wuxi/ultimate/aura.md](../wuxi/ultimate/aura.md)、[../wuxi/ultimate/palette.md](../wuxi/ultimate/palette.md)
 50. 角色招式参数库与逐镜样板 → [../wuxi/ultimate/cases/saint-seiya.md](../wuxi/ultimate/cases/saint-seiya.md)

@@ -33,7 +33,7 @@ ai-short-drama/
 ├── templates/
 │   └── continuity-ledger.md    # 多集作品的连续性台账模板（伏笔·人物·道具·规则）
 ├── scripts/
-│   └── validate.py             # 交付自检：时间码·镜长·单段15秒·台词容量·编号绑定·景别枚举
+│   └── validate.py             # 交付自检：字段·时间码·镜长·末镜·单段15秒·台词·主色·法相·编号·景别
 └── references/
     ├── triggers.md             # 触发词与各平台写法
     ├── cinematography.md       # 景别·运镜·焦距与稳定性

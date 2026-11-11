@@ -3,8 +3,11 @@
 """ai-short-drama 交付自检
 
 按本技能包自己的字段约定做确定性检查，不依赖任何第三方库，也不读外部 schema。
-只查能被机器判定的事：时间码、发声窗口、编号绑定、景别与运镜枚举、正文角色名。
+只查能被机器判定的事：字段结构、时间码、镜长、段长、发声窗口、编号绑定、主色、景别与运镜枚举、正文角色名。
 不能机器判定的（表演质量、情绪是否成立、构图是否好看）明确不做，不要指望它替人做美学判断。
+
+一条硬规矩：凡是"格式不合规就跳过"的写法都算 bug。所有检查先抓全部候选，再判格式，
+不合规的必须报出来——静默放行比不检查更害人。
 
 用法：
 
@@ -16,6 +19,9 @@
 
     # 没有分镜 JSON，只查提示词，并给出角色名清单
     python3 scripts/validate.py --prompt prompt.txt --names 沈砚,苏晚
+
+    # 查某门武功的专属约束（无光门不得出现发光、不给暖点门不得出现暖色）
+    python3 scripts/validate.py --prompt prompt.txt --method 独孤九剑
 
     # 自检：确认脚本本身可用
     python3 scripts/validate.py --self-test
@@ -46,10 +52,29 @@ WIDE_BANNED_FOR_PEOPLE = ["远景", "大全景"]
 CAMERA_MOVES = ["固定机位", "缓慢推近", "缓慢后移", "横向滑轨", "平移", "跟拍", "平摇", "升降", "焦点变化", "变焦"]
 MAX_PEOPLE_IN_SHOT = 3
 SPEECH_CHARS_PER_SEC = 4.1      # 中文可发声字/秒，取慢的一端
-SEGMENT_MAX_SECONDS = 15.0      # 单段生成上限
+SEGMENT_MAX_SECONDS = 15.0      # 单段生成上限（动作 + 台词合计）
 MIN_CUT_SECONDS = 2.0
 MAX_CUT_SECONDS = 5.0
 TIMECODE_TOLERANCE = 0.05       # 秒
+
+# H3 字段：基础路线三字段、多参考路线六字段，字段名和顺序都固定
+BASE_FIELDS = ["integrated_multimodal_description", "overall_soundscape", "non_diegetic_music"]
+REF_FIELDS = ["subject_definitions", "summary", "retention_analysis",
+              "detailed_description", "overall_soundscape", "non_diegetic_music"]
+REF_FIELDS_ZH = ["主体定义", "摘要", "保留分析", "详细描述", "整体声景", "非叙事配乐"]
+SEGMENT_START_PATTERNS = ["integrated_multimodal_description:", "detailed_description:",
+                          "subject_definitions:", "详细描述:", "主体定义:"]
+
+# 刻意全不给光的门（正文不得出现发光、光晕、光形）
+NO_LIGHT_METHODS = ["打狗棒法", "空明拳", "太极拳", "玄铁剑法", "独孤九剑", "庖丁解牛掌",
+                    "八极拳", "越女剑法", "夫妻刀法", "铁剑门剑法", "苗家剑法", "追魂夺命剑"]
+LIGHT_WORDS = ["发光", "光晕", "光形", "光效", "光芒", "光尘", "光纹", "光带", "亮起"]
+# 刻意不给暖点的门（正文不得出现暖色、暖点、火花）
+NO_WARM_METHODS = ["蛤蟆功", "五毒神掌", "玄冥神掌", "化功大法", "冰蚕毒掌", "九阴白骨爪",
+                   "十蛛万毒手", "千蛛万毒手", "吸星大法"]
+WARM_WORDS = ["暖色", "暖点", "暖光", "暖白", "暖黄", "赤金", "橙红", "橙黄", "火花"]
+# 法相比例区间
+FAXIANG_RATIO_RANGE = (1.2, 1.5)
 
 RESULT = []
 
@@ -89,6 +114,178 @@ def parse_tc(tc):
         h, m, s = parts
         return int(h) * 3600 + int(m) * 60 + float(s)
     raise ValueError("时间码格式不对: %r" % tc)
+
+
+def split_segments(text):
+    """按段起始字段切分。
+
+    H3 允许把一条连续剧情拆成多组输出，每组从 00:00.000 重新起算，
+    所以时间码、镜号、镜长、段长、台词容量都必须逐段判，不能全篇连起来算。
+    """
+    segs = []
+    cur = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if any(stripped.startswith(p) for p in SEGMENT_START_PATTERNS) and cur:
+            segs.append("\n".join(cur))
+            cur = [line]
+        else:
+            cur.append(line)
+    if cur:
+        segs.append("\n".join(cur))
+    return segs or [text]
+
+
+def check_field_structure(text):
+    """字段名必须齐全、顺序必须固定。这是 H3 最外层的契约，缺一个字段整段就不成立。"""
+    has_ref = ("subject_definitions" in text or "retention_analysis" in text
+               or "主体定义" in text or "保留分析" in text)
+    want_en = REF_FIELDS if has_ref else BASE_FIELDS
+    want_zh = REF_FIELDS_ZH if has_ref else None
+
+    present = []
+    if want_zh and sum(1 for f in want_zh if f in text) >= sum(1 for f in want_en if f in text):
+        # 中文六段：只要求出现过的都能对上顺序
+        names = want_zh
+        label = "中文六段"
+    else:
+        names = want_en
+        label = "六段" if has_ref else "三字段"
+
+    missing = [n for n in names if n not in text]
+    # 多段输出时，段级字段会重复；主体定义只在开头写一次
+    if missing and has_ref and "subject_definitions" in missing and "主体定义" in text:
+        missing.remove("subject_definitions")
+    if missing:
+        bad("P11 字段结构", "%s缺字段：%s（字段名和顺序固定，不能省、不能改名）" % (label, "、".join(missing)))
+        return
+    pos = [text.index(n) for n in names]
+    if pos != sorted(pos):
+        bad("P11 字段结构", "%s字段顺序颠倒，应为：%s" % (label, " → ".join(names)))
+    else:
+        ok("P11 字段结构", "%s字段齐全、顺序正确（%s）" % (label, " → ".join(names)))
+
+
+def check_segment(seg, idx, method):
+    """单段检查：镜号、时间码、镜长、末镜长、段长声明、台词容量、主色、法相比例。"""
+    # 镜号：每段都从 1 起
+    shot_nums = [int(m) for m in re.findall(r"\[Shot\s+(\d+)\]", seg)]
+    if shot_nums:
+        if shot_nums == list(range(1, len(shot_nums) + 1)):
+            ok("P2 镜号", "第%d段 [Shot N] 顺序正常：%s" % (idx, shot_nums))
+        else:
+            bad("P2 镜号", "第%d段 [Shot N] 不连续（每段都要从 1 起）：%s" % (idx, shot_nums))
+    else:
+        warn("P2 镜号", "第%d段没有 [Shot N] 标记，跳过" % idx)
+
+    # 时间码：先抓所有 At 后记号，格式不合规的一条不留地报出来
+    raw_tcs = re.findall(r"At\s+([0-9][0-9:.]*)", seg)
+    malformed = [t for t in raw_tcs if not re.match(r"^\d{2}:\d{2}\.\d{3}$", t)]
+    if malformed:
+        bad("P3 时间码格式", "第%d段 At 后的时间码必须是 mm:ss.mmm（两位分、两位秒、三位毫秒），不合规：%s"
+            % (idx, "、".join(malformed[:6])))
+    tcs = [t for t in raw_tcs if t not in malformed]
+    vals = [parse_tc(t) for t in tcs]
+    durations = []
+    if vals:
+        if any(b <= a for a, b in zip(vals, vals[1:])):
+            bad("P3 时间码", "第%d段 At 时间码未严格递增：%s" % (idx, tcs))
+        elif vals[0] != 0 and vals[0] < MIN_CUT_SECONDS - TIMECODE_TOLERANCE:
+            bad("P3 时间码", "第%d段首镜没写 At 时，第一个 At（%s）就是第二镜起点，必须 ≥ %.0fs"
+                % (idx, tcs[0], MIN_CUT_SECONDS))
+        else:
+            ok("P3 时间码", "第%d段 %d 个 At 时间码递增正常，起点 %s" % (idx, len(tcs), tcs[0]))
+        durations = [b - a for a, b in zip(vals, vals[1:])] if vals[0] == 0 else list(vals)
+
+    bad_du = []
+    for i, d in enumerate(durations):
+        if d < MIN_CUT_SECONDS - TIMECODE_TOLERANCE:
+            bad_du.append("第%d镜 %.1fs < %.0fs" % (i + 1, d, MIN_CUT_SECONDS))
+        elif d > MAX_CUT_SECONDS + TIMECODE_TOLERANCE:
+            bad_du.append("第%d镜 %.1fs > %.0fs" % (i + 1, d, MAX_CUT_SECONDS))
+    if bad_du:
+        bad("P7 镜长", "第%d段单镜必须 %.0f～%.0f 秒：%s" % (idx, MIN_CUT_SECONDS, MAX_CUT_SECONDS, "；".join(bad_du)))
+    elif durations:
+        ok("P7 镜长", "第%d段可推算的 %d 段镜长都在 %.0f～%.0f 秒内" % (idx, len(durations), MIN_CUT_SECONDS, MAX_CUT_SECONDS))
+
+    # 段长声明：末镜结束点不写时间码，只能靠「本段总长约 X 秒」核对
+    decl = None
+    m = re.search(r"(?:本段|全段|整段)?总[时長长]约?\s*([0-9]+(?:\.[0-9]+)?)\s*秒", seg)
+    if not m:
+        m = re.search(r"Total duration[^0-9]{0,12}([0-9]+(?:\.[0-9]+)?)", seg, re.I)
+    if m:
+        decl = float(m.group(1))
+    if decl is None:
+        warn("P8 段长", "第%d段没有「总时长 X 秒」声明，无法确认 ≤%.0f 秒" % (idx, SEGMENT_MAX_SECONDS))
+    elif decl > SEGMENT_MAX_SECONDS + 1e-6:
+        bad("P8 段长", "第%d段声明 %.1fs 超过单段上限 %.0fs，必须拆段并各自 ≤%.0fs"
+            % (idx, decl, SEGMENT_MAX_SECONDS, SEGMENT_MAX_SECONDS))
+    elif vals and vals[-1] >= decl:
+        bad("P8 段长", "第%d段末镜起点 %s 已不早于声明总时长 %.1fs" % (idx, tcs[-1], decl))
+    else:
+        ok("P8 段长", "第%d段声明 %.1fs，在单段上限 %.0fs 内" % (idx, decl, SEGMENT_MAX_SECONDS))
+
+    # 末镜时长：末镜不写结束时间码，但它的长度 = 声明总时长 − 末镜起点，同样必须落在 2～5 秒
+    if decl is not None and len(vals) >= 2:
+        last = decl - vals[-1]
+        if last < MIN_CUT_SECONDS - TIMECODE_TOLERANCE or last > MAX_CUT_SECONDS + TIMECODE_TOLERANCE:
+            bad("P12 末镜长", "第%d段末镜 %.1fs（声明 %.1fs − 起点 %.3fs）不在 %.0f～%.0f 秒；"
+                "末镜同样要切，或调整声明与切点" % (idx, last, decl, vals[-1], MIN_CUT_SECONDS, MAX_CUT_SECONDS))
+        else:
+            ok("P12 末镜长", "第%d段末镜 %.1fs，在 %.0f～%.0f 秒内" % (idx, last, MIN_CUT_SECONDS, MAX_CUT_SECONDS))
+
+    # 台词容量
+    lines = re.findall(r"<d(?:[^>]*)>(.*?)</d>", seg, re.S)
+    if decl is not None and lines:
+        spoken = 0
+        for body in lines:
+            body_d = re.sub(r"^\[[^\]]*\]", "", body.strip())
+            spoken += audible_chars(body_d)
+        need = spoken / SPEECH_CHARS_PER_SEC
+        if need > decl + 0.05:
+            bad("P9 台词容量", "第%d段台词 %d 字按 %.1f 字/秒需 %.1fs，超过本段 %.1fs；精简台词或拆段"
+                % (idx, spoken, SPEECH_CHARS_PER_SEC, need, decl))
+        else:
+            ok("P9 台词容量", "第%d段台词 %d 字约 %.1fs，放得进 %.1fs" % (idx, spoken, need, decl))
+            if need / decl > 0.71:
+                warn("P10 台词密度", "第%d段台词占 %.0f%% 时间（%.1f 字/秒），没给表演留空；"
+                     "10/12/15 秒的实写预算是 20～28 / 28～36 / 36～44 字" % (idx, need / decl * 100, spoken / decl))
+
+    # 主色：一招只有一个主色
+    colors = re.findall(r"#(?:[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})", seg)
+    uniq = sorted(set(c.upper() for c in colors))
+    if len(uniq) > 1:
+        bad("P15 主色", "第%d段出现 %d 个色值 %s；一招只能有一个主色，其余颜色用文字描述，不要再给色值"
+            % (idx, len(uniq), "、".join(uniq)))
+    elif uniq:
+        ok("P15 主色", "第%d段主色 %s 唯一" % (idx, uniq[0]))
+
+    # 法相比例：给了法相就必须写明确比例且落在 1.2～1.5 倍
+    if re.search(r"法相|金身|巨像|神像", seg):
+        ratios = [float(x) for x in re.findall(r"([0-9]+(?:\.[0-9]+)?)\s*倍", seg)]
+        if not ratios:
+            bad("P16 法相比例", "第%d段出现法相但没有写明确的倍率；必须写「约 1.2～1.5 倍」中的具体数值" % idx)
+        else:
+            outside = [r for r in ratios if not (FAXIANG_RATIO_RANGE[0] - 1e-6 <= r <= FAXIANG_RATIO_RANGE[1] + 1e-6)]
+            if outside:
+                bad("P16 法相比例", "第%d段法相比例 %s 不在 %.1f～%.1f 倍" % (idx, outside, FAXIANG_RATIO_RANGE[0], FAXIANG_RATIO_RANGE[1]))
+            else:
+                ok("P16 法相比例", "第%d段法相比例 %s，在 %.1f～%.1f 倍内" % (idx, ratios, FAXIANG_RATIO_RANGE[0], FAXIANG_RATIO_RANGE[1]))
+
+    # 门派专属：无光门不得发光、不给暖点门不得暖
+    if method:
+        if any(n in method for n in NO_LIGHT_METHODS):
+            hits = [w for w in LIGHT_WORDS if w in seg]
+            if hits:
+                bad("P17 无光门", "「%s」是刻意不给光的门，正文出现 %s" % (method, "、".join(hits)))
+            else:
+                ok("P17 无光门", "「%s」正文无发光词" % method)
+        if any(n in method for n in NO_WARM_METHODS):
+            hits = [w for w in WARM_WORDS if w in seg]
+            if hits:
+                bad("P18 不给暖点", "「%s」是刻意不给暖点的门，正文出现 %s" % (method, "、".join(hits)))
+            else:
+                ok("P18 不给暖点", "「%s」正文无暖色词" % method)
 
 
 def check_storyboard(data):
@@ -208,12 +405,15 @@ def check_storyboard(data):
                 s.get("number"), chars, capacity, d))
     if overloaded:
         bad("S9 口播预算", "台词超载：" + "；".join(overloaded[:4]) +
-            "。按顺序处理：删装饰动作 → 并行 → 单注意中心 → 报冲突拆分")
+            "。按顺序处理：删装饰动作 → 并行 → 单一注意中心 → 报冲突拆分")
     else:
         ok("S9 口播预算", "有台词的镜头均在发声窗口内（按 %.1f 字/秒）" % SPEECH_CHARS_PER_SEC)
 
 
-def check_prompt(text, names):
+def check_prompt(text, names, method=None):
+    # 字段结构
+    check_field_structure(text)
+
     # 1. 正文禁角色名
     if names:
         hits = []
@@ -229,52 +429,12 @@ def check_prompt(text, names):
         else:
             ok("P1 禁角色名", "正文未出现 %d 个角色名" % len(names))
 
-    # 2. [Shot N] 连续
-    shot_nums = [int(m) for m in re.findall(r"\[Shot\s+(\d+)\]", text)]
-    if shot_nums:
-        if shot_nums == list(range(1, len(shot_nums) + 1)) or shot_nums[0] == 1 and sorted(set(shot_nums)) == shot_nums:
-            ok("P2 镜号", "提示词内 [Shot N] 顺序正常：%s" % shot_nums)
-        else:
-            bad("P2 镜号", "[Shot N] 不连续：%s" % shot_nums)
-    else:
-        warn("P2 镜号", "提示词内没有 [Shot N] 标记，跳过")
+    # 2. 按段跑时间码 / 镜长 / 段长 / 台词容量 / 主色 / 法相 / 门派约束
+    segs = split_segments(text)
+    for i, seg in enumerate(segs, 1):
+        check_segment(seg, i, method)
 
-    # 3. 时间码：格式 / 起点 / 递增 / 镜长
-    #    先抓所有 At 后的记号，格式不合规的一条不留地报出来——不能因为正则匹配不上就静默跳过。
-    raw_tcs = re.findall(r"At\s+([0-9][0-9:.]*)", text)
-    malformed = [t for t in raw_tcs if not re.match(r"^\d{2}:\d{2}\.\d{3}$", t)]
-    if malformed:
-        bad("P3 时间码格式", "At 后的时间码必须是 mm:ss.mmm（两位分、两位秒、三位毫秒），以下不合规：%s"
-            % "、".join(malformed[:6]))
-    tcs = [t for t in raw_tcs if t not in malformed]
-    if tcs:
-        vals = [parse_tc(t) for t in tcs]
-        if any(b <= a for a, b in zip(vals, vals[1:])):
-            bad("P3 时间码", "At 时间码未严格递增：%s" % tcs)
-        else:
-            # 首镜写 At 必须是 00:00.000；没写时第一个 At 是第二镜起点，必须够一个最短镜长
-            if vals[0] != 0 and vals[0] < MIN_CUT_SECONDS - TIMECODE_TOLERANCE:
-                bad("P3 时间码", "首镜没写 At 时，第一个 At（%s）就是第二镜起点，必须 ≥ %.0fs"
-                    % (tcs[0], MIN_CUT_SECONDS))
-            else:
-                ok("P3 时间码", "%d 个 At 时间码递增正常，起点 %s" % (len(tcs), tcs[0]))
-
-        # 镜长：首镜写了 At 就看相邻差值；没写就把第一个 At 值本身当首镜长
-        durations = [b - a for a, b in zip(vals, vals[1:])] if vals[0] == 0 else list(vals)
-        bad_du = []
-        for i, d in enumerate(durations):
-            if d < MIN_CUT_SECONDS - TIMECODE_TOLERANCE:
-                bad_du.append("第%d镜 %.1fs < %.0fs" % (i + 1, d, MIN_CUT_SECONDS))
-            elif d > MAX_CUT_SECONDS + TIMECODE_TOLERANCE:
-                bad_du.append("第%d镜 %.1fs > %.0fs" % (i + 1, d, MAX_CUT_SECONDS))
-        if bad_du:
-            bad("P7 镜长", "单镜必须 %.0f～%.0f 秒：%s" % (MIN_CUT_SECONDS, MAX_CUT_SECONDS, "；".join(bad_du)))
-        elif durations:
-            ok("P7 镜长", "可推算的 %d 段镜长都在 %.0f～%.0f 秒内" % (len(durations), MIN_CUT_SECONDS, MAX_CUT_SECONDS))
-    else:
-        warn("P3 时间码", "提示词内没有 At 时间码，跳过")
-
-    # 4. 参考编号不跳号、连续
+    # 3. 参考编号不跳号、连续
     for tag in ("Picture", "Video", "Audio", "Subject"):
         refs = [int(m) for m in re.findall(r"<%s\s+(\d+)>" % tag, text)]
         if not refs:
@@ -285,13 +445,13 @@ def check_prompt(text, names):
         else:
             ok("P4 编号", "<%s N> 共 %d 个，编号连续" % (tag, len(uniq)))
 
-    # 5. 否定式动作粗筛
+    # 4. 否定式动作粗筛
     neg = re.findall(r"(没有[^，。；]{1,6}|没[^\u4e00-\u9fa5]?(?:接话|按下去|看|动|说话)|不去看|不看他|不看她)", text)
     if neg:
         warn("P5 否定式动作", "疑似否定式动作 %d 处（画面生成不了「没发生的事」，改写成替代动作）：%s" % (
             len(neg), "、".join(neg[:5])))
 
-    # 6. <d> 标签闭合
+    # 5. <d> 标签闭合
     open_count = text.count("<d>")
     close_count = text.count("</d>")
     if open_count != close_count:
@@ -299,46 +459,36 @@ def check_prompt(text, names):
     elif open_count:
         ok("P6 台词标签", "%d 组台词标签成对闭合" % open_count)
 
-    # 7. 单段总时长 ≤ 15 秒（动作 + 台词合计），必须有可核对的时长声明
-    decl = None
-    m = re.search(r"(?:本段|全段|整段)?总[时長长]约?\s*([0-9]+(?:\.[0-9]+)?)\s*秒", text)
-    if not m:
-        m = re.search(r"Total duration[^0-9]{0,12}([0-9]+(?:\.[0-9]+)?)", text, re.I)
-    if m:
-        decl = float(m.group(1))
-    if decl is None:
-        warn("P8 段长", "正文没有「总时长 X 秒」声明，无法确认单段 ≤%.0f 秒；多段时每段都要声明"
-             % SEGMENT_MAX_SECONDS)
-    elif decl > SEGMENT_MAX_SECONDS + 1e-6:
-        bad("P8 段长", "本段总时长 %.1fs 超过单段上限 %.0fs，必须拆段并让每段各自 ≤%.0fs"
-            % (decl, SEGMENT_MAX_SECONDS, SEGMENT_MAX_SECONDS))
-    else:
-        # 末镜起点不应晚于声明总时长
-        last_tc = tcs[-1] if tcs else None
-        if last_tc and parse_tc(last_tc) >= decl:
-            bad("P8 段长", "末镜起点 %s 已不早于声明总时长 %.1fs，时间轴与声明对不上" % (last_tc, decl))
-        else:
-            ok("P8 段长", "声明总时长 %.1fs，在单段上限 %.0fs 内" % (decl, SEGMENT_MAX_SECONDS))
+    # 6. 台词组必须带语言码：<d>[zh] 原文</d>
+    bodies = re.findall(r"<d(?:[^>]*)>(.*?)</d>", text, re.S)
+    nolang = [b.strip()[:18] for b in bodies if not re.match(r"^\[[A-Za-z][A-Za-z-]*\]", b.strip())]
+    if nolang:
+        bad("P14 语言码", "%d 组台词缺 <d>[语言] 语言码：%s" % (len(nolang), "；".join(nolang[:3])))
+    elif bodies:
+        ok("P14 语言码", "%d 组台词都带语言码" % len(bodies))
 
-    # 8. 台词容量：可发声字数 ÷ 4.1 必须放得进本段时间
-    lines = re.findall(r"<d(?:[^>]*)>(.*?)</d>", text, re.S)
-    if decl is not None and lines:
-        spoken = 0
-        for seg in lines:
-            body_d = re.sub(r"^\[[^\]]*\]", "", seg.strip())   # 去掉 [zh] 语言码
-            spoken += audible_chars(body_d)
-        need = spoken / SPEECH_CHARS_PER_SEC
-        if need > decl + 0.05:
-            bad("P9 台词容量", "台词 %d 字按 %.1f 字/秒需 %.1f 秒，超过本段 %.1f 秒；精简台词或拆段"
-                % (spoken, SPEECH_CHARS_PER_SEC, need, decl))
-        elif need > SEGMENT_MAX_SECONDS:
-            bad("P9 台词容量", "台词需 %.1f 秒，超过单段上限 %.0fs，必须拆段" % (need, SEGMENT_MAX_SECONDS))
+    # 7. 说话人编号按首次发声顺序分配 (S1)(S2)…
+    labels = re.findall(r"\(S(\d+)\)", text)
+    if labels:
+        seen = []
+        err = None
+        for n in labels:
+            v = int(n)
+            if v not in seen:
+                if v != len(seen) + 1:
+                    err = "说话人编号必须按首次发声顺序从 (S1) 连续分配，实际首次出现 (S%d)，此前只有 %d 个说话人" % (
+                        v, len(seen))
+                    break
+                seen.append(v)
+        if err:
+            bad("P13 说话人", err)
         else:
-            ok("P9 台词容量", "台词 %d 字约 %.1fs，放得进 %.1fs 的本段" % (spoken, need, decl))
-            # 密度：说话占掉整段就没有走位与反应的时间，实写预算上限约 2.9 字/秒
-            if need / decl > 0.71:
-                warn("P10 台词密度", "台词占本段 %.0f%% 时间（%.1f 字/秒），没给表演留空；"
-                     "10/12/15 秒的实写预算是 20～28 / 28～36 / 36～44 字" % (need / decl * 100, spoken / decl))
+            ok("P13 说话人", "%d 位说话人编号 (S1)…(S%d) 按首次发声顺序分配" % (len(seen), len(seen)))
+    else:
+        if bodies:
+            bad("P13 说话人", "有台词但没有 (S1)(S2) 说话人标号；同一人跨镜沿用原编号")
+        else:
+            ok("P13 说话人", "无台词，跳过说话人编号")
 
 
 def self_test():
@@ -351,34 +501,79 @@ def self_test():
         ],
         "assets": {"characters": ["沈砚", "苏晚"], "scenes": ["柴房"], "props": [], "voices": []},
     }
-    prompt = """本段总长约 7 秒。
-[Shot 1] A middle-aged man in a grey robe stands by the door.
-<d>[Chinese] 你早就知道了。</d>
+    prompt = """integrated_multimodal_description:
+本段总长约 7 秒。
+[Shot 1] At 00:00.000, A middle-aged man in a grey robe stands by the door.
+(S1) 中年男子，声音低：<d>[zh] 你早就知道了。</d>
 [Shot 2] At 00:03.000, a close-up of a young woman's wrist.
-<Picture 1> reference for the woman's face."""
+overall_soundscape:
+门外雨声。
+non_diegetic_music:
+无。"""
     check_storyboard(data)
     check_prompt(prompt, ["沈砚", "苏晚"])
-
-    # 回归 1：首镜写 At 00:00.000 是正常起点，不得被当成「首镜过短」而报警
-    RESULT.clear()
-    check_prompt("[Shot 1] At 00:00.000, 近景，人站在门口。\n[Shot 2] At 00:03.200, 特写。", [])
-    if any("首个 At" in msg or "第二镜起点" in msg for lvl, _, msg in RESULT if lvl != "PASS"):
-        print("自检未通过：首镜起点 00:00.000 被误判为镜长过短")
+    counts = {"PASS": 0, "WARN": 0, "FAIL": 0}
+    for level, _, _ in RESULT:
+        counts[level] += 1
+    if counts["FAIL"]:
+        print("自检未通过：", counts)
+        for lvl, gate, msg in RESULT:
+            if lvl != "PASS":
+                print("  ", lvl, gate, msg)
         return 1
 
-    # 回归 2：畸形时间码必须报阻断，不能被正则静默放过
-    RESULT.clear()
-    check_prompt("[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:001.200, 特写。", [])
-    if not any(lvl == "FAIL" and "时间码格式" in gate for lvl, gate, _ in RESULT):
-        print("自检未通过：畸形时间码 00:001.200 未被拦下")
-        return 1
-
-    # 回归 3：单镜超过 5 秒必须报阻断
-    RESULT.clear()
-    check_prompt("[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:06.500, 特写。", [])
-    if not any(lvl == "FAIL" and "镜长" in gate for lvl, gate, _ in RESULT):
-        print("自检未通过：6.5 秒单镜未被拦下")
-        return 1
+    # 每条新检查都要有一个反例，否则就是"看起来查了、其实没查"
+    cases = [
+        ("首镜 00:00.000 不得被当成镜长过短",
+         "[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:02.500, 特写。\nintegrated_multimodal_description:\n本段总长约 5 秒。\noverall_soundscape:\nnone\nnon_diegetic_music:\nnone",
+         None, None, lambda r: not any(l != "PASS" and "镜长" in g for l, g, _ in r)),
+        ("畸形时间码 00:001.200 必须拦下",
+         "[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:001.200, 特写。",
+         None, "P3 时间码格式", None),
+        ("6.5 秒单镜必须拦下",
+         "[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:06.500, 特写。",
+         None, "P7 镜长", None),
+        ("多段输出每段从 00:00.000 重算必须放行",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:03.000, 特写。\noverall_soundscape:\nx\nnon_diegetic_music:\ny\n\nintegrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:03.000, 特写。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, None, lambda r: not any(l == "FAIL" and ("P3" in g or "P7" in g or "P2" in g) for l, g, _ in r)),
+        ("缺 non_diegetic_music 必须拦下",
+         "overall_soundscape:\nx\n[Shot 1] At 00:00.000, 近景。\nintegrated_multimodal_description:\n本段总长约 4 秒。",
+         None, "P11 字段结构", None),
+        ("末镜 6.5 秒必须拦下",
+         "integrated_multimodal_description:\n本段总长约 9.5 秒。\n[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:03.000, 特写。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P12 末镜长", None),
+        ("有台词没 (S1) 必须拦下",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\n<d>[zh] 你回来了。</d>\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P13 说话人", None),
+        ("<d> 缺语言码必须拦下",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\n(S1) 女子：<d>你回来了。</d>\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P14 语言码", None),
+        ("两个主色色值必须拦下",
+         "integrated_multimodal_description:\n本段总长约 6 秒。主色 `#5A4A63` 与 `#FF8A3D`。\n[Shot 1] At 00:00.000, 近景。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P15 主色", None),
+        ("法相比例 1.0 倍必须拦下",
+         "integrated_multimodal_description:\n本段总长约 8 秒。身后浮起金身法相，高约本体 1.0 倍。\n[Shot 1] At 00:00.000, 近景。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P16 法相比例", None),
+        ("无光门写光晕必须拦下",
+         "integrated_multimodal_description:\n本段总长约 6 秒。剑身泛起冷白光晕。\n[Shot 1] At 00:00.000, 近景。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         "独孤九剑", "P17 无光门", None),
+    ]
+    for name, bad_text, method, expect_gate, expect_clean in cases:
+        RESULT.clear()
+        check_prompt(bad_text, [], method)
+        if expect_clean is not None:
+            if not expect_clean(RESULT):
+                print("自检未通过：", name)
+                for lvl, gate, msg in RESULT:
+                    if lvl != "PASS":
+                        print("  ", lvl, gate, msg)
+                return 1
+        elif not any(lvl == "FAIL" and expect_gate in gate for lvl, gate, _ in RESULT):
+            print("自检未通过：", name)
+            for lvl, gate, msg in RESULT:
+                if lvl != "PASS":
+                    print("  ", lvl, gate, msg)
+            return 1
 
     RESULT.clear()
     check_storyboard(data)
@@ -398,6 +593,7 @@ def main():
     ap.add_argument("storyboard", nargs="?", help="分镜 JSON 路径")
     ap.add_argument("--prompt", help="H3 视频提示词正文路径（.txt/.md）")
     ap.add_argument("--names", help="角色名，逗号分隔（没有分镜 JSON 时用）")
+    ap.add_argument("--method", help="武功名，用于查无光门／不给暖点门的专属约束")
     ap.add_argument("--self-test", action="store_true", help="跑内置样例，确认脚本可用")
     ap.add_argument("--quiet", action="store_true", help="只打印 FAIL/WARN")
     args = ap.parse_args()
@@ -419,7 +615,7 @@ def main():
         names = [n.strip() for n in args.names.split(",") if n.strip()]
     if args.prompt:
         with open(args.prompt, encoding="utf-8") as f:
-            check_prompt(f.read(), names)
+            check_prompt(f.read(), names, args.method)
 
     counts = {"PASS": 0, "WARN": 0, "FAIL": 0}
     for level, gate, msg in RESULT:
