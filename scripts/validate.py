@@ -82,6 +82,12 @@ SHORT_LANG_CODES = {"zh", "en", "ja", "jp", "cn", "kr", "ko", "fr", "de", "es", 
                     "eng", "chi", "chs", "cht", "yue", "cmn"}
 # 音频保留关系（用了 <Audio N> 就必须在保留分析里有一行账）
 AUDIO_RETENTION = ["fully_copy", "partially_copy", "reference", "weak_reference"]
+# H3 接口硬限制：时长 4~15 秒且必须是整数；素材上限见官方 API 文档
+DURATION_RANGE = (4.0, 15.0)
+MAX_PICTURES = 9
+MAX_VIDEOS = 3
+MAX_AUDIOS = 3
+MAX_MEDIA_FILES = 12
 
 RESULT = []
 
@@ -545,6 +551,36 @@ def check_prompt(text, names, method=None):
         else:
             ok("P20 图片绑定", "%d 张图都写明了绑定对象" % len(pic_nums))
 
+    # 11. 时长合规：H3 只接受 4~15 秒的整数秒
+    decls = re.findall(r"本段总长约\s*([0-9]+(?:\.?[0-9]*)?)\s*秒", text)
+    for d in decls:
+        v = float(d)
+        if v != int(v) or not (DURATION_RANGE[0] <= v <= DURATION_RANGE[1]):
+            bad("P23 时长合规", "声明的时长 %s 秒不合规：H3 只接受 %g~%g 秒的整数秒"
+                % (d, DURATION_RANGE[0], DURATION_RANGE[1]))
+            break
+    else:
+        if decls:
+            ok("P23 时长合规", "声明时长 %s 秒，在 4~15 整数区间" % decls[0])
+
+    # 12. 素材上限：图 ≤9、视频 ≤3、音频 ≤3、合计 ≤12
+    vid_nums = sorted({int(n) for n in re.findall(r"<Video\s+(\d+)>", text)})
+    total = len(pic_nums) + len(vid_nums) + len(aud_nums)
+    over = []
+    if len(pic_nums) > MAX_PICTURES:
+        over.append("图片 %d 张（上限 %d）" % (len(pic_nums), MAX_PICTURES))
+    if len(vid_nums) > MAX_VIDEOS:
+        over.append("视频 %d 段（上限 %d）" % (len(vid_nums), MAX_VIDEOS))
+    if len(aud_nums) > MAX_AUDIOS:
+        over.append("音频 %d 段（上限 %d）" % (len(aud_nums), MAX_AUDIOS))
+    if total > MAX_MEDIA_FILES:
+        over.append("素材合计 %d 个（上限 %d）" % (total, MAX_MEDIA_FILES))
+    if over:
+        bad("P24 素材上限", "超出 H3 接口上限：%s" % "；".join(over))
+    elif total:
+        ok("P24 素材上限", "图 %d、视频 %d、音频 %d，合计 %d 个，在接口上限内"
+           % (len(pic_nums), len(vid_nums), len(aud_nums), total))
+
     # 10. 路线一致性：路线由用户选择与素材在时间轴上的作用共同决定，不能自相矛盾
     route = ""
     for k in ("FL2VA", "I2VA", "L2VA", "Ref2VA", "T2VA"):
@@ -644,6 +680,12 @@ non_diegetic_music:
         ("无光门写光晕必须拦下",
          "integrated_multimodal_description:\n本段总长约 6 秒。剑身泛起冷白光晕。\n[Shot 1] At 00:00.000, 近景。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          "独孤九剑", "P17 无光门", None),
+        ("时长写成 3.5 秒必须拦下（H3 只收 4~15 整数）",
+         "integrated_multimodal_description:\n本段总长约 3.5 秒。\n[Shot 1] At 00:00.000, 近景。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P23 时长", None),
+        ("图片引用 10 张必须拦下（上限 9）",
+         "subject_definitions:\n" + "\n".join("<Subject %d> 主体%d，取 <Picture %d> 的外形。" % (i, i, i) for i in range(1, 11)) + "\nsummary:\nreference generation。\nretention_analysis:\n" + "\n".join("<Picture %d> partially_preserved：外形。" % i for i in range(1, 11)) + "\ndetailed_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P24 素材", None),
         ("没有 [Shot N] 时间线必须拦下",
          "integrated_multimodal_description:\n本段总长约 6 秒，大雨中的废墟。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          None, "P21 时间线", None),

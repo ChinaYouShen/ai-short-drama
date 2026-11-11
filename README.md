@@ -39,6 +39,7 @@ ai-short-drama/
 └── references/
     ├── triggers.md             # 触发词与各平台写法
     ├── cinematography.md       # 景别·运镜·焦距与稳定性
+    ├── h3-official.md          # H3 官方硬限制·运镜词表·模型脾气·生成后核对
     ├── h3-format.md            # MiniMax H3 字段与参考标签规范
     ├── optimization.md         # 已有提示词的优化流程与不可生成写法清单
     ├── production/             # 选题·大纲·人物·场景·道具·站位·剧本·分镜·图片·漫剧·小说改编
