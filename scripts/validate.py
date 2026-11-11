@@ -239,20 +239,40 @@ def check_prompt(text, names):
     else:
         warn("P2 镜号", "提示词内没有 [Shot N] 标记，跳过")
 
-    # 3. At MM:SS.mmm 时间码递增，且首镜不带时间码或为 0
-    tcs = re.findall(r"At\s+(\d{2,}:\d{2}\.\d{3})", text)
+    # 3. 时间码：格式 / 起点 / 递增 / 镜长
+    #    先抓所有 At 后的记号，格式不合规的一条不留地报出来——不能因为正则匹配不上就静默跳过。
+    raw_tcs = re.findall(r"At\s+([0-9][0-9:.]*)", text)
+    malformed = [t for t in raw_tcs if not re.match(r"^\d{2}:\d{2}\.\d{3}$", t)]
+    if malformed:
+        bad("P3 时间码格式", "At 后的时间码必须是 mm:ss.mmm（两位分、两位秒、三位毫秒），以下不合规：%s"
+            % "、".join(malformed[:6]))
+    tcs = [t for t in raw_tcs if t not in malformed]
     if tcs:
         vals = [parse_tc(t) for t in tcs]
         if any(b <= a for a, b in zip(vals, vals[1:])):
             bad("P3 时间码", "At 时间码未严格递增：%s" % tcs)
-        elif vals[0] < MIN_CUT_SECONDS - 0.01:
-            warn("P3 时间码", "首个 At 时间码为 %s，短于单镜最短 %.0fs，除非首镜确实更短" % (
-                tcs[0], MIN_CUT_SECONDS))
         else:
-            ok("P3 时间码", "%d 个 At 时间码递增正常，起点 %s（首镜不写 At 时起点即第二镜开始）" % (
-                len(tcs), tcs[0]))
+            # 首镜写 At 必须是 00:00.000；没写时第一个 At 是第二镜起点，必须够一个最短镜长
+            if vals[0] != 0 and vals[0] < MIN_CUT_SECONDS - TIMECODE_TOLERANCE:
+                bad("P3 时间码", "首镜没写 At 时，第一个 At（%s）就是第二镜起点，必须 ≥ %.0fs"
+                    % (tcs[0], MIN_CUT_SECONDS))
+            else:
+                ok("P3 时间码", "%d 个 At 时间码递增正常，起点 %s" % (len(tcs), tcs[0]))
+
+        # 镜长：首镜写了 At 就看相邻差值；没写就把第一个 At 值本身当首镜长
+        durations = [b - a for a, b in zip(vals, vals[1:])] if vals[0] == 0 else list(vals)
+        bad_du = []
+        for i, d in enumerate(durations):
+            if d < MIN_CUT_SECONDS - TIMECODE_TOLERANCE:
+                bad_du.append("第%d镜 %.1fs < %.0fs" % (i + 1, d, MIN_CUT_SECONDS))
+            elif d > MAX_CUT_SECONDS + TIMECODE_TOLERANCE:
+                bad_du.append("第%d镜 %.1fs > %.0fs" % (i + 1, d, MAX_CUT_SECONDS))
+        if bad_du:
+            bad("P7 镜长", "单镜必须 %.0f～%.0f 秒：%s" % (MIN_CUT_SECONDS, MAX_CUT_SECONDS, "；".join(bad_du)))
+        elif durations:
+            ok("P7 镜长", "可推算的 %d 段镜长都在 %.0f～%.0f 秒内" % (len(durations), MIN_CUT_SECONDS, MAX_CUT_SECONDS))
     else:
-        warn("P3 时间码", "提示词内没有 At MM:SS.mmm 时间码，跳过")
+        warn("P3 时间码", "提示词内没有 At 时间码，跳过")
 
     # 4. 参考编号不跳号、连续
     for tag in ("Picture", "Video", "Audio", "Subject"):
@@ -279,6 +299,47 @@ def check_prompt(text, names):
     elif open_count:
         ok("P6 台词标签", "%d 组台词标签成对闭合" % open_count)
 
+    # 7. 单段总时长 ≤ 15 秒（动作 + 台词合计），必须有可核对的时长声明
+    decl = None
+    m = re.search(r"(?:本段|全段|整段)?总[时長长]约?\s*([0-9]+(?:\.[0-9]+)?)\s*秒", text)
+    if not m:
+        m = re.search(r"Total duration[^0-9]{0,12}([0-9]+(?:\.[0-9]+)?)", text, re.I)
+    if m:
+        decl = float(m.group(1))
+    if decl is None:
+        warn("P8 段长", "正文没有「总时长 X 秒」声明，无法确认单段 ≤%.0f 秒；多段时每段都要声明"
+             % SEGMENT_MAX_SECONDS)
+    elif decl > SEGMENT_MAX_SECONDS + 1e-6:
+        bad("P8 段长", "本段总时长 %.1fs 超过单段上限 %.0fs，必须拆段并让每段各自 ≤%.0fs"
+            % (decl, SEGMENT_MAX_SECONDS, SEGMENT_MAX_SECONDS))
+    else:
+        # 末镜起点不应晚于声明总时长
+        last_tc = tcs[-1] if tcs else None
+        if last_tc and parse_tc(last_tc) >= decl:
+            bad("P8 段长", "末镜起点 %s 已不早于声明总时长 %.1fs，时间轴与声明对不上" % (last_tc, decl))
+        else:
+            ok("P8 段长", "声明总时长 %.1fs，在单段上限 %.0fs 内" % (decl, SEGMENT_MAX_SECONDS))
+
+    # 8. 台词容量：可发声字数 ÷ 4.1 必须放得进本段时间
+    lines = re.findall(r"<d(?:[^>]*)>(.*?)</d>", text, re.S)
+    if decl is not None and lines:
+        spoken = 0
+        for seg in lines:
+            body_d = re.sub(r"^\[[^\]]*\]", "", seg.strip())   # 去掉 [zh] 语言码
+            spoken += audible_chars(body_d)
+        need = spoken / SPEECH_CHARS_PER_SEC
+        if need > decl + 0.05:
+            bad("P9 台词容量", "台词 %d 字按 %.1f 字/秒需 %.1f 秒，超过本段 %.1f 秒；精简台词或拆段"
+                % (spoken, SPEECH_CHARS_PER_SEC, need, decl))
+        elif need > SEGMENT_MAX_SECONDS:
+            bad("P9 台词容量", "台词需 %.1f 秒，超过单段上限 %.0fs，必须拆段" % (need, SEGMENT_MAX_SECONDS))
+        else:
+            ok("P9 台词容量", "台词 %d 字约 %.1fs，放得进 %.1fs 的本段" % (spoken, need, decl))
+            # 密度：说话占掉整段就没有走位与反应的时间，实写预算上限约 2.9 字/秒
+            if need / decl > 0.71:
+                warn("P10 台词密度", "台词占本段 %.0f%% 时间（%.1f 字/秒），没给表演留空；"
+                     "10/12/15 秒的实写预算是 20～28 / 28～36 / 36～44 字" % (need / decl * 100, spoken / decl))
+
 
 def self_test():
     data = {
@@ -290,10 +351,36 @@ def self_test():
         ],
         "assets": {"characters": ["沈砚", "苏晚"], "scenes": ["柴房"], "props": [], "voices": []},
     }
-    prompt = """[Shot 1] A middle-aged man in a grey robe stands by the door.
+    prompt = """本段总长约 7 秒。
+[Shot 1] A middle-aged man in a grey robe stands by the door.
 <d>[Chinese] 你早就知道了。</d>
 [Shot 2] At 00:03.000, a close-up of a young woman's wrist.
 <Picture 1> reference for the woman's face."""
+    check_storyboard(data)
+    check_prompt(prompt, ["沈砚", "苏晚"])
+
+    # 回归 1：首镜写 At 00:00.000 是正常起点，不得被当成「首镜过短」而报警
+    RESULT.clear()
+    check_prompt("[Shot 1] At 00:00.000, 近景，人站在门口。\n[Shot 2] At 00:03.200, 特写。", [])
+    if any("首个 At" in msg or "第二镜起点" in msg for lvl, _, msg in RESULT if lvl != "PASS"):
+        print("自检未通过：首镜起点 00:00.000 被误判为镜长过短")
+        return 1
+
+    # 回归 2：畸形时间码必须报阻断，不能被正则静默放过
+    RESULT.clear()
+    check_prompt("[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:001.200, 特写。", [])
+    if not any(lvl == "FAIL" and "时间码格式" in gate for lvl, gate, _ in RESULT):
+        print("自检未通过：畸形时间码 00:001.200 未被拦下")
+        return 1
+
+    # 回归 3：单镜超过 5 秒必须报阻断
+    RESULT.clear()
+    check_prompt("[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:06.500, 特写。", [])
+    if not any(lvl == "FAIL" and "镜长" in gate for lvl, gate, _ in RESULT):
+        print("自检未通过：6.5 秒单镜未被拦下")
+        return 1
+
+    RESULT.clear()
     check_storyboard(data)
     check_prompt(prompt, ["沈砚", "苏晚"])
     counts = {"PASS": 0, "WARN": 0, "FAIL": 0}

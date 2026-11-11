@@ -23,6 +23,7 @@
 | 道具、场景、站位卡及缺项检查 | [assets.md](assets.md) |
 | 创作、改编或检查短剧剧本 | [script.md](script.md) |
 | 创作或检查漫剧剧本与分镜 | [manju.md](manju.md) |
+| 小说正文转 10～15 秒单元的分镜剧本 | [adapt.md](adapt.md) |
 | 新建、补充、修改或检查短剧分镜 | [storyboard.md](storyboard.md) |
 | 人物、道具、场景、站位、分镜静帧图片提示词 | [images/index.md](images/index.md) |
 | MiniMax H3 文戏或武戏视频提示词 | [../h3-format.md](../h3-format.md) 和对应戏型索引 |

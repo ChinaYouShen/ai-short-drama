@@ -48,7 +48,7 @@
 44. 角色空间占位图润色 → [images/polish.md](images/polish.md)
 45. 同一场景的多角度提示词润色 → [images/polish.md](images/polish.md)
 46. 跨集连续性台账（伏笔·人物·道具·规则四账） → [../../templates/continuity-ledger.md](../../templates/continuity-ledger.md)
-47. 交付前机器自检（时间码·发声窗口·编号绑定·景别枚举） → [../../scripts/validate.py](../../scripts/validate.py)
+47. 交付前机器自检（时间码·镜长·单段 15 秒·台词容量·编号绑定·景别枚举） → [../../scripts/validate.py](../../scripts/validate.py)
 48. 必杀技结构与五种范式 → [../wuxi/ultimate/index.md](../wuxi/ultimate/index.md)
 49. 法相显形·同步·消散与配色槽位 → [../wuxi/ultimate/aura.md](../wuxi/ultimate/aura.md)、[../wuxi/ultimate/palette.md](../wuxi/ultimate/palette.md)
 50. 角色招式参数库与逐镜样板 → [../wuxi/ultimate/cases/saint-seiya.md](../wuxi/ultimate/cases/saint-seiya.md)
@@ -58,5 +58,6 @@
 54. 武戏的体系分类与单选（六大类·门派阵营·四步搭新体系） → [../wuxi/catalog/index.md](../wuxi/catalog/index.md)
 55. 分类选型的逐层下钻与返回上一步 → [../wuxi/catalog/select.md](../wuxi/catalog/select.md)
 56. 金庸十五部作品的全部带特效武学谱（分卷·三档分级·逐门参数） → [../wuxi/catalog/jinyong/index.md](../wuxi/catalog/jinyong/index.md)
+57. 小说正文转分镜剧本（信息提取·人物卡声线·场景卡·10～15 秒单元·双层台词预算·六步输出） → [adapt.md](adapt.md)
 
 每次只加载当前产物需要的模块；用户可以跳过列表中的任何阶段。
