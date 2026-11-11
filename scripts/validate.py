@@ -194,7 +194,8 @@ def check_segment(seg, idx, method):
         else:
             bad("P2 镜号", "第%d段 [Shot N] 不连续（每段都要从 1 起）：%s" % (idx, shot_nums))
     else:
-        warn("P2 镜号", "第%d段没有 [Shot N] 标记，跳过" % idx)
+        bad("P21 时间线", "第%d段没有任何 [Shot N] 镜头标记；提示词必须有逐镜时间线，"
+            "每镜写 [Shot N] 与 At mm:ss.mmm，否则无法生成也无法对轴" % idx)
 
     # 时间码：先抓所有 At 后记号，格式不合规的一条不留地报出来
     raw_tcs = re.findall(r"At\s+([0-9][0-9:.]*)", seg)
@@ -544,6 +545,38 @@ def check_prompt(text, names, method=None):
         else:
             ok("P20 图片绑定", "%d 张图都写明了绑定对象" % len(pic_nums))
 
+    # 10. 路线一致性：路线由用户选择与素材在时间轴上的作用共同决定，不能自相矛盾
+    route = ""
+    for k in ("FL2VA", "I2VA", "L2VA", "Ref2VA", "T2VA"):
+        if re.search(k, text):
+            route = k
+            break
+    if not route:
+        if re.search(r"多参|多参考", text):
+            route = "Ref2VA"
+        elif re.search(r"reference generation", text):
+            route = "Ref2VA"
+        elif re.search(r"首帧|尾帧|硬帧", text):
+            route = "I2VA"
+        elif re.search(r"首尾帧", text):
+            route = "FL2VA"
+    hard_frame_words = []
+    for m in re.finditer(r"(硬首帧|硬尾帧|硬帧|首帧|尾帧)", text):
+        prefix = text[max(0, m.start() - 8):m.start()]
+        if re.search(r"(不|非|禁止|无需|不用|别|无)", prefix):
+            continue  # 「不做首帧锁定」「不作为硬帧」这类否定表述不算违规
+        hard_frame_words.append(m.group(1))
+    if route in ("I2VA", "L2VA") and len(pic_nums) > 1:
+        bad("P22 路线一致", "路线写 %s（单张硬帧），却引用了 %d 张 <Picture N>；"
+            "多张参考图应走 Ref2VA，要硬帧就把多余的图移出时间轴" % (route, len(pic_nums)))
+    elif route == "FL2VA" and len(pic_nums) > 2:
+        bad("P22 路线一致", "路线写 FL2VA（首尾各一张），却引用了 %d 张 <Picture N>" % len(pic_nums))
+    elif route in ("Ref2VA", "T2VA") and hard_frame_words:
+        bad("P22 路线一致", "路线是多参考／文生视频，正文却出现「%s」；多参里图只锁外形与空间，"
+            "不占时间轴，要硬帧请改走 I2VA／L2VA／FL2VA 并说明" % "、".join(sorted(set(hard_frame_words))))
+    elif route:
+        ok("P22 路线一致", "路线 %s 与素材用法一致" % route)
+
 
 def self_test():
     data = {
@@ -611,6 +644,12 @@ non_diegetic_music:
         ("无光门写光晕必须拦下",
          "integrated_multimodal_description:\n本段总长约 6 秒。剑身泛起冷白光晕。\n[Shot 1] At 00:00.000, 近景。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          "独孤九剑", "P17 无光门", None),
+        ("没有 [Shot N] 时间线必须拦下",
+         "integrated_multimodal_description:\n本段总长约 6 秒，大雨中的废墟。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P21 时间线", None),
+        ("多参路线里写硬首帧必须拦下",
+         "subject_definitions:\n<Subject 1> 女子，取 <Picture 1> 的外形。\n<Subject 2> 场景，取 <Picture 2> 的空间。\nsummary:\nreference generation。以 <Picture 2> 为硬首帧。\nretention_analysis:\n<Subject 1> partially_preserved：出场。\n<Picture 1> partially_preserved：外形。\n<Picture 2> partially_preserved：空间。\ndetailed_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P22 路线一致", None),
         ("语言码写短码 zh 必须拦下",
          "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\n(S1) 男子：<d>[zh] 你回来了。</d>\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          None, "P14 语言码", None),
