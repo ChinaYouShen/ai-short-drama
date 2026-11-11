@@ -1,6 +1,6 @@
 ---
 name: ai-short-drama
-description: 按用户选择创建或检查短剧、漫剧、人物与场景资产、图片提示词、分镜及 MiniMax H3 文戏武戏提示词；各阶段可跳过或直接启动，只加载当前任务模块。
+description: 按用户选择创建或检查短剧、漫剧、人物与场景资产、图片提示词、分镜及 MiniMax H3 文戏武戏提示词；各阶段可跳过或直接启动，只加载当前任务模块。关键词：短剧、漫剧、分镜、文戏、武戏、必杀技、H3 提示词、多参考 Ref2VA、首尾帧。
 metadata:
   maintainer: YS
   language: zh-CN

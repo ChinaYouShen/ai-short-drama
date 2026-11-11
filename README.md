@@ -4,7 +4,7 @@
 
 - 许可证：**GPL-3.0** —— 可自由商用，但修改后分发必须同样以 GPL-3.0 开源
 - 语言：简体中文
-- 适配：Codex / Cursor / DeepSeek Harness / 豆包 / 文心一言
+- 适配：Codex / Cursor / DeepSeek Harness / 豆包 / 文心一言 / WorkBuddy
 
 > 本技能只负责**内容整理与提示词生产**，不负责上传素材、调用 API、实际生成图片或视频、剪辑与成片验收，这部分交给外部工作流。
 
@@ -29,7 +29,8 @@ ai-short-drama/
 │   ├── cursor.mdc              # Cursor 规则文件
 │   ├── deepseek-harness.md     # DeepSeek Harness
 │   ├── doubao.md               # 豆包
-│   └── wenxin.md               # 文心一言
+│   ├── wenxin.md               # 文心一言
+│   └── workbuddy.md            # WorkBuddy（@技能名唤起、文件夹导入）
 ├── templates/
 │   ├── continuity-ledger.md    # 多集作品的连续性台账模板（伏笔·人物·道具·规则）
 │   └── reference-manifest.md   # 参考素材清单模板（图·音频·视频的编号与绑定）
@@ -58,6 +59,7 @@ ai-short-drama/
 | DeepSeek Harness | `adapters/deepseek-harness.md` |
 | 豆包 | `adapters/doubao.md` |
 | 文心一言 | `adapters/wenxin.md` |
+| WorkBuddy | `adapters/workbuddy.md` |
 
 接入时让智能体读取对应入口文件与根目录 `SKILL.md`，并确保入口文件内的相对路径仍指向同一技能目录。
 
