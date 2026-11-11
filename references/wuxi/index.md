@@ -31,7 +31,7 @@
 
 用户要求必杀技、大招、喊招式、法相、能量特效、招式还原时，先读 [ultimate/index.md](ultimate/index.md) 判范式，再按其中路由取模块；必杀技以外的普通武戏不走这条。
 
-动作设计读取 [flow.md](flow.md)，并只加载当前动作载体对应的模块。
+动作设计读取 [flow.md](flow.md)，并只加载当前动作载体对应的模块。动作能不能拍成、打斗接触怎么写、固定机位要写满哪三件事，读 [generability.md](generability.md)。
 制作分镜时读取 [storyboard/index.md](storyboard/index.md)，只加载选定的分镜方式。
 H3 镜头应用 [../cinematography.md](../cinematography.md)；只有涉及跨镜、跨段或声音时才读取 [continuity.md](continuity.md) 或 [sound.md](sound.md)。
 输出 H3 提示词前按 [validation.md](validation.md) 检查当前交付内容；用户只要求讨论或草拟招式时不要求先走完分镜流程。
