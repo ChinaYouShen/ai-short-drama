@@ -83,6 +83,12 @@ SHORT_LANG_CODES = {"zh", "en", "ja", "jp", "cn", "kr", "ko", "fr", "de", "es", 
 # 音频保留关系（用了 <Audio N> 就必须在保留分析里有一行账）
 AUDIO_RETENTION = ["fully_copy", "partially_copy", "reference", "weak_reference"]
 # H3 接口硬限制：时长 4~15 秒且必须是整数；素材上限见官方 API 文档
+VFX_WORDS = ("光核","光痕","光带","光柱","光斑","光环","光点","光雾","光幕","粒子","碎屑",
+             "余烬","气浪","冲击环","冲击点","霜","灼痕","裂纹","阵纹","漩涡","曼陀罗","掌印",
+             "法相","火花","电弧","羽状","鳞","放射","残影","光印")
+ACT_WORDS = ("拳","掌","踢","劈","斩","撞","格挡","出招","连击","挥","蹬","肘","膝")
+ABSTRACT_VFX = ("强大的能量","耀眼的","无数光点","恐怖的气息","无形的力量","铺天盖地","天崩地裂",
+                "毁天灭地","气感","一团光","满屏的光","无穷的力量")
 DURATION_RANGE = (4.0, 15.0)
 MAX_PICTURES = 9
 MAX_VIDEOS = 3
@@ -581,6 +587,40 @@ def check_prompt(text, names, method=None):
         ok("P24 素材上限", "图 %d、视频 %d、音频 %d，合计 %d 个，在接口上限内"
            % (len(pic_nums), len(vid_nums), len(aud_nums), total))
 
+    # 13. 武戏特效层：写打斗就必须把特效写成物件，不能只写动作
+    is_fight = bool(method) or bool(re.search(r"法相|招式名|喊出|必杀技|光形", text))
+    if is_fight:
+        shots = re.split(r"(?=\[Shot\s+\d+\])", text)
+        empty = []
+        for blk in shots:
+            head = re.match(r"\[Shot\s+(\d+)\]", blk)
+            if not head:
+                continue
+            if re.search("|".join(ACT_WORDS), blk) and not re.search("|".join(VFX_WORDS), blk):
+                empty.append(head.group(1))
+        if empty:
+            bad("P25 特效层", "第 %s 镜有打斗动作但没有任何特效描写；武戏每镜必须写满"
+                "源→形→动→触→残五层（拳峰亮什么光、光是什么形状、怎么走、落点怎么了、剩什么），"
+                "只写拳脚会被模型拍成普通打架" % "、".join(empty))
+        else:
+            ok("P25 特效层", "每镜都带特效描写")
+        low = []
+        for blk in shots:
+            head = re.match(r"\[Shot\s+(\d+)\]", blk)
+            if head and len([w for w in VFX_WORDS if w in blk]) < 3:
+                low.append(head.group(1))
+        if low:
+            warn("P25 特效密度", "第 %s 镜特效词少于 3 个，特效会被模型画得很淡；"
+                "建议每镜 6~10 个特效词" % "、".join(low))
+    # 14. 抽象特效词：没有物件只有形容词，等于没写特效
+    abstract = [w for w in ABSTRACT_VFX if w in text]
+    if abstract:
+        bad("P26 特效主体", "出现抽象特效词「%s」；特效必须写成可画的物件——飞出去的是什么"
+            "（龙、剑影、冰柱、锁链、掌印）、多大、从哪出现、怎么动、命中什么姿态。"
+            "写法见 references/wuxi/ultimate/vfx.md" % "、".join(abstract))
+    elif is_fight:
+        ok("P26 特效主体", "未出现抽象特效词")
+
     # 10. 路线一致性：路线由用户选择与素材在时间轴上的作用共同决定，不能自相矛盾
     route = ""
     for k in ("FL2VA", "I2VA", "L2VA", "Ref2VA", "T2VA"):
@@ -686,6 +726,17 @@ non_diegetic_music:
         ("图片引用 10 张必须拦下（上限 9）",
          "subject_definitions:\n" + "\n".join("<Subject %d> 主体%d，取 <Picture %d> 的外形。" % (i, i, i) for i in range(1, 11)) + "\nsummary:\nreference generation。\nretention_analysis:\n" + "\n".join("<Picture %d> partially_preserved：外形。" % i for i in range(1, 11)) + "\ndetailed_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          None, "P24 素材", None),
+        ("抽象特效词「强大的能量」必须拦下",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。一拳打出，带起一团强大的能量。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         "天马流星拳", "P26 特效主体", None),
+        ("武戏只写拳脚、没有特效必须拦下",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。一名青年右拳直击对手胸口，对手后退两步。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         "天马流星拳", "P25 特效层", None),
+        ("武戏五层特效写满必须放行",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。一名青年右拳直击，拳峰亮起青蓝光核，线状光痕推进，落点炸开冲击环，气浪推开雨水，碎屑上飘。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         "天马流星拳", None,
+         lambda r: not any(l == "FAIL" and "P25" in g for l, g, _ in r)),
+
         ("没有 [Shot N] 时间线必须拦下",
          "integrated_multimodal_description:\n本段总长约 6 秒，大雨中的废墟。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          None, "P21 时间线", None),
