@@ -24,6 +24,9 @@ TABLES = [
     ("references/wuxi/catalog/jinyong/shediao.md", "能源形态", 0, 2),
     ("references/wuxi/catalog/jinyong/tianlong.md", "能源形态", 0, 2),
     ("references/wuxi/catalog/jinyong/xiaoao.md", "能源形态", 0, 2),
+    ("references/wuxi/catalog/gulong.md", "能源形态", 0, 2),
+    ("references/wuxi/catalog/liangyusheng.md", "能源形态", 0, 2),
+    ("references/wuxi/catalog/wenyuan.md", "能源形态", 0, 2),
     ("references/wuxi/ultimate/cases/saint-seiya.md", "特效主体与轨迹", 1, 5),
     ("references/wuxi/ultimate/cases/xianglong.md", "龙形动作", 1, 2),
 ]

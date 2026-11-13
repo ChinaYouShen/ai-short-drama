@@ -53,6 +53,9 @@ L3 才是镜头与提示词。
 | --- | --- | --- |
 | 东方武侠 | 丐帮·降龙十八掌 | 已有 [../ultimate/cases/xianglong.md](../ultimate/cases/xianglong.md) |
 | 东方武侠 | 少林、武当、华山、峨眉、明教 | 待补 |
+| 东方武侠 | 古龙·陆小凤／楚留香／边城浪子／三少爷的剑／大旗英雄传 | 已有 13 招参数与特效卡 [gulong.md](gulong.md) |
+| 东方武侠 | 梁羽生·白发魔女传／七剑下天山 | 已有 12 招参数与特效卡 [liangyusheng.md](liangyusheng.md) |
+| 东方武侠 | 温瑞安·四大名捕／说英雄谁是英雄 | 已有 7 招参数与特效卡 [wenyuan.md](wenyuan.md) |
 | 神话神系 | 青铜圣斗士（天马、天龙、白鸟、仙女、凤凰） | 已有 [../ultimate/cases/saint-seiya.md](../ultimate/cases/saint-seiya.md) |
 | 神话神系 | 黄金圣斗士十二宫、海斗士、冥斗士、神斗士 | 已有参数表，无成品样板 |
 | 神话神系 | 希腊神话本体系（宙斯、波塞冬、哈迪斯） | 待补 |
