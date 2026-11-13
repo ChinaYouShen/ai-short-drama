@@ -569,6 +569,24 @@ def check_prompt(text, names, method=None):
         if decls:
             ok("P23 时长合规", "声明时长 %s 秒，在 4~15 整数区间" % decls[0])
 
+    # 11.5 多段总账：段数、各段整数时长、全片总长必须对得上
+    seg_cnt = len(split_segments(text))
+    film_total = re.findall(r"全片总长约\s*([0-9]+(?:\.?[0-9]*)?)\s*秒", text)
+    if seg_cnt > 1:
+        if not decls:
+            warn("P27 多段时间轴", "共 %d 段但没有「本段总长约 X 秒」声明，无法核对整数时间轴" % seg_cnt)
+        elif len(decls) < seg_cnt:
+            warn("P27 多段时间轴", "共 %d 段，只有 %d 段写了时长声明；每段都要写" % (seg_cnt, len(decls)))
+        elif film_total:
+            s = sum(float(d) for d in decls[:seg_cnt])
+            if abs(s - float(film_total[0])) > TIMECODE_TOLERANCE:
+                bad("P27 多段时间轴", "各段声明 %s 秒合计 %.1fs，与「全片总长约 %s 秒」不符；"
+                    "多段必须首尾相接、无零头" % ("+".join(decls[:seg_cnt]), s, film_total[0]))
+            else:
+                ok("P27 多段时间轴", "%d 段合计 %.1fs，与全片声明一致" % (seg_cnt, s))
+        else:
+            ok("P27 多段时间轴", "%d 段各自声明整数时长，未写全片总长" % seg_cnt)
+
     # 12. 素材上限：图 ≤9、视频 ≤3、音频 ≤3、合计 ≤12
     vid_nums = sorted({int(n) for n in re.findall(r"<Video\s+(\d+)>", text)})
     total = len(pic_nums) + len(vid_nums) + len(aud_nums)
@@ -687,6 +705,12 @@ non_diegetic_music:
 
     # 每条新检查都要有一个反例，否则就是"看起来查了、其实没查"
     cases = [
+        ("多段合计与全片声明不符必须拦下",
+         "integrated_multimodal_description:\n全片总长约 20 秒。\n本段总长约 8 秒。\n[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:03.000, 特写。\noverall_soundscape:\nx\nnon_diegetic_music:\ny\n\nintegrated_multimodal_description:\n本段总长约 10 秒。\n[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:03.000, 特写。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P27 多段时间轴", None),
+        ("多段合计等于全片声明必须放行",
+         "integrated_multimodal_description:\n全片总长约 18 秒。\n本段总长约 8 秒。\n[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:03.000, 特写。\noverall_soundscape:\nx\nnon_diegetic_music:\ny\n\nintegrated_multimodal_description:\n本段总长约 10 秒。\n[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:03.000, 特写。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, None, lambda r: not any(l == "FAIL" and "P27" in g for l, g, _ in r)),
         ("首镜 00:00.000 不得被当成镜长过短",
          "[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:02.500, 特写。\nintegrated_multimodal_description:\n本段总长约 5 秒。\noverall_soundscape:\nnone\nnon_diegetic_music:\nnone",
          None, None, lambda r: not any(l != "PASS" and "镜长" in g for l, g, _ in r)),
