@@ -85,7 +85,10 @@ AUDIO_RETENTION = ["fully_copy", "partially_copy", "reference", "weak_reference"
 # H3 接口硬限制：时长 4~15 秒且必须是整数；素材上限见官方 API 文档
 VFX_WORDS = ("光核","光痕","光带","光柱","光斑","光环","光点","光雾","光幕","粒子","碎屑",
              "余烬","气浪","冲击环","冲击点","霜","灼痕","裂纹","阵纹","漩涡","曼陀罗","掌印",
-             "法相","火花","电弧","羽状","鳞","放射","残影","光印")
+             "法相","火花","电弧","羽状","鳞","放射","残影","光印",
+     "气劲","弧光","光弧","薄弧","光刃","剑光","刀光","龙形","水花","水雾","砖屑","尘雾",
+     "震波","波纹","光网","光锥","冰晶","火翼","虚影","焦痕","裂痕","光束","银线","白心",
+     "光纹","残光","碎片","飞屑","水幕","瓦砾","烟尘","火星","水线","水柱")
 ACT_WORDS = ("拳","掌","踢","劈","斩","撞","格挡","出招","连击","挥","蹬","肘","膝")
 ABSTRACT_VFX = ("强大的能量","耀眼的","无数光点","恐怖的气息","无形的力量","铺天盖地","天崩地裂",
                 "毁天灭地","气感","一团光","满屏的光","无穷的力量")
@@ -297,6 +300,9 @@ def check_segment(seg, idx, method):
     # 法相比例：给了法相就必须写明确比例且落在 1.2～1.5 倍
     if re.search(r"法相|金身|巨像|神像", seg):
         ratios = [float(x) for x in re.findall(r"([0-9]+(?:\.[0-9]+)?)\s*倍", seg)]
+        cn = {"一": 1, "二": 2, "两": 2, "三": 3, "四": 4, "五": 5,
+              "六": 6, "七": 7, "八": 8, "九": 9, "十": 10}
+        ratios += [float(cn[c]) for c in re.findall(r"([一二两三四五六七八九十])\s*倍", seg)]
         if not ratios:
             bad("P16 法相比例", "第%d段出现法相但没有写明确的倍率；必须写「约 1.2～1.5 倍」中的具体数值" % idx)
         else:
@@ -406,16 +412,16 @@ def check_storyboard(data):
     missing = []
     for s in shots:
         for name in (s.get("characterNames") or []):
-            if characters and name not in characters:
+            if name not in characters:
                 missing.append("第 %s 镜角色「%s」不在清单" % (s.get("number"), name))
         scene = s.get("sceneName")
-        if scene and scenes and scene not in scenes:
+        if scene and scene not in scenes:
             missing.append("第 %s 镜场景「%s」不在清单" % (s.get("number"), scene))
         for name in (s.get("propNames") or []):
-            if props and name not in props:
+            if name not in props:
                 missing.append("第 %s 镜道具「%s」不在清单" % (s.get("number"), name))
         for name in (s.get("voiceNames") or []):
-            if voices and name not in voices:
+            if name not in voices:
                 missing.append("第 %s 镜声音「%s」不在清单" % (s.get("number"), name))
     if missing:
         bad("S8 资产绑定", "；".join(missing[:6]) + ("…" if len(missing) > 6 else ""))
@@ -742,6 +748,21 @@ non_diegetic_music:
                 print("  ", lvl, gate, msg)
         return 1
 
+    # 资产清单为空时也必须查：空清单曾让未登记角色整条放行
+    empty_assets = {
+        "shots": [{"number": 1, "duration": 3.0, "shotSize": "近景", "camera": "固定机位",
+                   "dialogue": "", "characterNames": ["沈砚"], "sceneName": "柴房"}],
+        "assets": {"characters": [], "scenes": ["柴房"], "props": [], "voices": []},
+    }
+    RESULT.clear()
+    check_storyboard(empty_assets)
+    if not any(l == "FAIL" and "S8" in g for l, g, _ in RESULT):
+        print("自检未通过：资产清单为空时，未登记角色必须拦下")
+        for lvl, gate, msg in RESULT:
+            if lvl != "PASS":
+                print("  ", lvl, gate, msg)
+        return 1
+
     # 每条新检查都要有一个反例，否则就是"看起来查了、其实没查"
     cases = [
         ("命中没有受力结果必须提示",
@@ -837,6 +858,9 @@ non_diegetic_music:
          "integrated_multimodal_description:\n本段总长约 15 秒。\n[Shot 1] 开场。\n[Shot 2] At 00:03.200, 切。\n[Shot 3] At 00:07.400, 再切。\n[Shot 4] At 00:11.600, 收。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          None, None,
          lambda r: not any(l == "FAIL" and ("P7" in g or "P12" in g or "P8" in g) for l, g, _ in r)),
+        ("法相写「三倍」必须拦下（中文数字也要认）",
+         "integrated_multimodal_description:\n本段总长约 8 秒。身后浮起金身法相，高约本体三倍。\n[Shot 1] At 00:00.000, 近景。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P16 法相比例", None),
         ("中文六段不得被「主体定义」拆成两段",
          "主体定义:\n<Subject 1> 男子。\n摘要:\nx\n保留分析:\ny\n详细描述:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:03.000, 特写。\n整体声景:\nx\n非叙事配乐:\ny",
          None, None, lambda r: not any("第2段" in msg for _, _, msg in r)),

@@ -1,0 +1,14 @@
+{
+  "episode": 1,
+  "shots": [
+    {"number": 1, "duration": 3.2, "shotSize": "中景", "camera": "固定机位",
+     "dialogue": "你早就知道了。", "characterNames": ["沈砚", "苏晚"], "sceneName": "柴房",
+     "propNames": ["油灯"], "timecode": "00:00.000"},
+    {"number": 2, "duration": 4.0, "shotSize": "近景", "camera": "缓慢推近",
+     "dialogue": "", "characterNames": ["苏晚"], "sceneName": "柴房", "timecode": "00:03.200"},
+    {"number": 3, "duration": 3.6, "shotSize": "特写", "camera": "跟拍",
+     "dialogue": "我没打算瞒你。", "characterNames": ["沈砚"], "sceneName": "柴房",
+     "propNames": ["油灯"], "timecode": "00:07.200"}
+  ],
+  "assets": {"characters": ["沈砚", "苏晚"], "scenes": ["柴房"], "props": ["油灯"], "voices": []}
+}

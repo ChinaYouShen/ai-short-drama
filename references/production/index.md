@@ -30,6 +30,12 @@
 | 人物、道具、场景、站位、分镜静帧图片提示词 | [images/index.md](images/index.md) |
 | MiniMax H3 文戏或武戏视频提示词 | [../h3-format.md](../h3-format.md) 和对应戏型索引 |
 | 多集作品的跨集连续性台账 | [../../templates/continuity-ledger.md](../../templates/continuity-ledger.md) |
+| 编排一场武戏的动作节拍与配速 | [../wuxi/action-directing.md](../wuxi/action-directing.md) |
+| 给招式定特效主体、查特效写法 | [../wuxi/ultimate/vfx.md](../wuxi/ultimate/vfx.md) |
+| 选门派、选招、查招式参数与群单标注 | [../wuxi/catalog/select.md](../wuxi/catalog/select.md) |
+| 一条剧情拆成多段生成并拼接 | [multisegment.md](multisegment.md) |
+| 决定开头钩子与集尾卡点怎么写 | [platform.md](platform.md) |
+| 换视频模型前核对时长与素材上限 | [../models-compare.md](../models-compare.md) |
 | 交付前机器自检 | [../../scripts/validate.py](../../scripts/validate.py) |
 
 选题、大纲、剧本、资产、分镜和图片提示词都是可选阶段。用户可直接给一份剧本要求 H3 提示词，也可只生成一张角色设定图提示词，不必先完成其他阶段。

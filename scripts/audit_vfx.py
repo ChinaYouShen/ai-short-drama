@@ -18,18 +18,18 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# 招式表：(文件, 表头关键词, 招式列, 特效列)
+# 招式表：(文件, 表头关键词, 招式列, 特效列, 打击面列)
 TABLES = [
-    ("references/wuxi/catalog/jinyong/misc-early.md", "能源形态", 0, 2),
-    ("references/wuxi/catalog/jinyong/misc-mid.md", "能源形态", 0, 2),
-    ("references/wuxi/catalog/jinyong/shediao.md", "能源形态", 0, 2),
-    ("references/wuxi/catalog/jinyong/tianlong.md", "能源形态", 0, 2),
-    ("references/wuxi/catalog/jinyong/xiaoao.md", "能源形态", 0, 2),
-    ("references/wuxi/catalog/gulong.md", "光形 / 粒子", 0, 2),
-    ("references/wuxi/catalog/liangyusheng.md", "光形 / 粒子", 0, 2),
-    ("references/wuxi/catalog/wenyuan.md", "光形 / 粒子", 0, 2),
-    ("references/wuxi/ultimate/cases/saint-seiya.md", "特效主体与轨迹", 1, 5),
-    ("references/wuxi/ultimate/cases/xianglong.md", "龙形动作", 1, 2),
+    ("references/wuxi/catalog/jinyong/misc-early.md", "能源形态", 0, 2, 5),
+    ("references/wuxi/catalog/jinyong/misc-mid.md", "能源形态", 0, 2, 5),
+    ("references/wuxi/catalog/jinyong/shediao.md", "能源形态", 0, 2, 5),
+    ("references/wuxi/catalog/jinyong/tianlong.md", "能源形态", 0, 2, 5),
+    ("references/wuxi/catalog/jinyong/xiaoao.md", "能源形态", 0, 2, 5),
+    ("references/wuxi/catalog/gulong.md", "光形 / 粒子", 0, 2, None),
+    ("references/wuxi/catalog/liangyusheng.md", "光形 / 粒子", 0, 2, None),
+    ("references/wuxi/catalog/wenyuan.md", "光形 / 粒子", 0, 2, None),
+    ("references/wuxi/ultimate/cases/saint-seiya.md", "特效主体与轨迹", 1, 6, 3),
+    ("references/wuxi/ultimate/cases/xianglong.md", "龙形动作", 1, 2, 7),
 ]
 
 MOTION = ("贯穿", "推进", "盘旋", "收束", "扩散", "合拢", "塌缩", "下压", "横扫", "折返",
@@ -43,38 +43,60 @@ SIZE = ("长约", "高约", "直径", "长约", "宽约", "长", "高", "米", "
 EMPTY = ("无", "没有", "—", "-")
 
 
-def rows(path, header_word, move_col, vfx_col):
-    full = os.path.join(ROOT, path)
-    if not os.path.exists(full):
-        return None
-    lines = open(full, encoding="utf-8").read().splitlines()
-    out = []
-    ncols = None
+def _blocks(lines):
+    """把连续的表格行切成块：(表头, 分隔行, 数据行列表)。"""
+    blocks, cur = [], []
     for line in lines:
-        cells = [c.strip() for c in line.strip("|").split("|")] if line.startswith("|") else None
-        if cells is not None and header_word in line:
-            ncols = len(cells)          # 新表开始
+        if line.startswith("|"):
+            cur.append(line)
+        elif cur:
+            blocks.append(cur)
+            cur = []
+    if cur:
+        blocks.append(cur)
+    out = []
+    for b in blocks:
+        if len(b) < 2:
             continue
-        if ncols is None:
+        cells = [c.strip() for c in b[1].strip("|").split("|")]
+        if not all(re.fullmatch(r"[-: ]*", c) for c in cells):
             continue
-        if cells is None or len(cells) != ncols:
-            ncols = None                # 表结束，继续找下一张同表头的表
-            continue
-        if "---" in line:
-            continue
-        if len(cells) <= max(move_col, vfx_col):
-            continue
-        out.append((cells[move_col], cells[vfx_col]))
+        out.append((b[0], b[1], b[2:]))
     return out
 
 
-def check(path, header_word, move_col, vfx_col):
-    data = rows(path, header_word, move_col, vfx_col)
+def _cells(line):
+    return [c.strip() for c in line.strip("|").split("|")]
+
+
+def rows(path, header_word, move_col, vfx_col, face_col=None):
+    full = os.path.join(ROOT, path)
+    if not os.path.exists(full):
+        return None
+    out = []
+    for header, _sep, data in _blocks(open(full, encoding="utf-8").read().splitlines()):
+        if header_word not in header:
+            continue
+        n = len(_cells(header))
+        for line in data:
+            cells = _cells(line)
+            if len(cells) != n:
+                continue
+            face = cells[face_col] if face_col is not None and face_col < len(cells) else None
+            out.append((cells[move_col], cells[vfx_col], face))
+    return out
+
+
+def check(path, header_word, move_col, vfx_col, face_col=None):
+    data = rows(path, header_word, move_col, vfx_col, face_col)
     if data is None:
         return []
     issues = []
     seen = {}
-    for move, vfx in data:
+    faces = ("单", "群", "单·群", "群·区", "自", "区", "自·单", "自·群")
+    for move, vfx, face in data:
+        if face is not None and face not in faces:
+            issues.append((move, "打击面写成「%s」，只允许 单／群／单·群／群·区／自／区／自·单／自·群" % face))
         if not vfx:
             issues.append((move, "空字段"))
             continue
@@ -91,13 +113,36 @@ def check(path, header_word, move_col, vfx_col):
     return issues
 
 
+CROSS = [
+    ("references/wuxi/catalog/gulong.md", "打击面", "光形 / 粒子"),
+    ("references/wuxi/catalog/liangyusheng.md", "打击面", "光形 / 粒子"),
+    ("references/wuxi/catalog/wenyuan.md", "打击面", "光形 / 粒子"),
+]
+
+
+def names_by(path, keyword, col=0):
+    full = os.path.join(ROOT, path)
+    if not os.path.exists(full):
+        return None
+    out = []
+    for header, _sep, data in _blocks(open(full, encoding="utf-8").read().splitlines()):
+        if keyword not in _cells(header):
+            continue
+        n = len(_cells(header))
+        for line in data:
+            cells = _cells(line)
+            if len(cells) == n:
+                out.append(cells[col])
+    return out
+
+
 def main():
     quiet = "--quiet" in sys.argv
     total_moves = 0
     total_issues = 0
     broken = []
-    for path, hw, mc, vc in TABLES:
-        data = rows(path, hw, mc, vc)
+    for path, hw, mc, vc, fc in TABLES:
+        data = rows(path, hw, mc, vc, fc)
         if data is None:
             print("跳过（文件不存在）：", path)
             continue
@@ -106,7 +151,7 @@ def main():
             broken.append((path, hw))
             continue
         total_moves += len(data)
-        issues = check(path, hw, mc, vc)
+        issues = check(path, hw, mc, vc, fc)
         total_issues += len(issues)
         name = path.split("/")[-1]
         if issues:
@@ -116,6 +161,18 @@ def main():
                     print("   - %s：%s" % (move, why))
         else:
             print("✓ %s（%d 条）全部有特效主体" % (name, len(data)))
+    for path, ikw, mkw in CROSS:
+        idx = names_by(path, ikw)
+        mov = names_by(path, mkw)
+        if idx is None or mov is None:
+            continue
+        if set(idx) != set(mov) or len(idx) != len(mov):
+            only_i = sorted(set(idx) - set(mov))
+            only_m = sorted(set(mov) - set(idx))
+            print("✗ %s：索引表与招式表名单不一致（只在索引：%s；只在招式表：%s）"
+                  % (path.split("/")[-1], "、".join(only_i) or "无", "、".join(only_m) or "无"))
+            total_issues += 1
+
     if broken:
         for path, hw in broken:
             print("✗ %s：表头「%s」未匹配到任何行，这份文件等于没查" % (path.split("/")[-1], hw))

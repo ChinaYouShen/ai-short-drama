@@ -36,7 +36,7 @@ ai-short-drama/
 │   └── reference-manifest.md   # 参考素材清单模板（图·音频·视频的编号与绑定）
 ├── scripts/
 │   ├── validate.py             # 交付自检：字段·时间码·镜长·末镜·单段15秒·多段总账·一镜一动作·净稿·命中结果·终结起势·台词·主色·法相·编号·景别·特效层
-│   └── audit_vfx.py            # 特效主体体检：133 条招式逐条查是否画得出来
+│   └── audit_vfx.py            # 特效主体体检：165 条招式逐条查是否画得出来，并校验打击面取值
 └── references/
     ├── triggers.md             # 触发词与各平台写法
     ├── cinematography.md       # 景别·运镜·焦距与稳定性
@@ -163,3 +163,16 @@ ai-short-drama/
 ---
 
 © 2026 酉神。Licensed under GPL-3.0.
+
+## 样例
+
+`samples/` 四份文件可直接跑，全部过检：
+
+| 文件 | 是什么 | 怎么跑 |
+| --- | --- | --- |
+| `kanglong_youhui.txt` | 亢龙有悔 12 秒 5 镜，Ref2VA 三图 | `python3 scripts/validate.py --prompt samples/kanglong_youhui.txt --method 降龙十八掌` |
+| `fight15.txt` | 雨夜巷战 15 秒单段，纯动作转特效写法 | `python3 scripts/validate.py --prompt samples/fight15.txt` |
+| `fight_ref2va.txt` | 多参考路线的双人对打 | `python3 scripts/validate.py --prompt samples/fight_ref2va.txt` |
+| `storyboard_sample.json` | 分镜 JSON，字段与资产绑定齐备 | `python3 scripts/validate.py samples/storyboard_sample.json` |
+
+仓库带 GitHub Actions：每次 push 自动跑自检、招式体检与这四份样例，不通过即标红。

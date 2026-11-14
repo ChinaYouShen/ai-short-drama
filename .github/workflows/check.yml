@@ -1,0 +1,25 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 自检（含文档同步）
+        run: python3 scripts/validate.py --self-test
+      - name: 招式体检
+        run: python3 scripts/audit_vfx.py
+      - name: 样例逐份过检
+        run: |
+          python3 scripts/validate.py --prompt samples/kanglong_youhui.txt --method 降龙十八掌
+          python3 scripts/validate.py --prompt samples/fight15.txt
+          python3 scripts/validate.py --prompt samples/fight_ref2va.txt
+          python3 scripts/validate.py samples/storyboard_sample.json

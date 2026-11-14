@@ -46,7 +46,7 @@
 
 ### 第四步：定招式谱
 
-至少 8 招，最多 18 招，按七列表排（见 [../ultimate/forms.md](../ultimate/forms.md)）：
+至少 8 招，最多 18 招，按七个字段排（见 [../ultimate/forms.md](../ultimate/forms.md)）：
 
 | 列 | 内容 |
 | --- | --- |
