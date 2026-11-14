@@ -614,6 +614,36 @@ def check_prompt(text, names, method=None):
     else:
         ok("P28 一镜一动作", "镜内没有串行动词")
 
+    # 12.6 净稿：工作痕迹不许混进生成正文
+    draft_marks = re.findall(r"(自检表?|检查点|节奏面板|预估\s*[0-9.]+\s*秒|本集结算|待改项|TODO)",
+                             "\n".join(shot_lines))
+    if draft_marks:
+        warn("P29 净稿分离", "正文里出现工作痕迹 %s；可复制正文只留场景、动作、台词、声音，面板另放并标注不进生成"
+             % "、".join(sorted(set(draft_marks))))
+    else:
+        ok("P29 净稿分离", "正文没有工作痕迹")
+
+    # 12.7 命中必须有受力结果：写「击中／砸中」却没写位移或变形
+    hit_words = re.compile(r"(击中|砸中|踹中|劈中|刺中|拍中|轰中)")
+    result_words = re.compile(r"(退|倒|滑|震|偏|弯|凹|碎|裂|翻|脱手|跪|塌|飞|仰|侧移|后撤|踉跄)")
+    no_result = []
+    for ln in shot_lines:
+        if hit_words.search(ln) and not result_words.search(ln):
+            m = re.match(r"\[Shot\s+(\d+)\]", ln.lstrip())
+            no_result.append(m.group(1) if m else "?")
+    if no_result:
+        warn("P30 命中结果", "第 %s 镜写了命中却没有受力结果；补位移方向、接触点或环境反馈" % "、".join(no_result))
+    else:
+        ok("P30 命中结果", "命中都写了受力结果")
+
+    # 12.8 终结技要有起势：写必杀却没有蓄力或锁定
+    finisher = re.search(r"(必杀|终结|最后一击|绝招|大招|收势)", text)
+    windup = re.search(r"(蓄|起势|沉肩|压地|后引|收缩|锁定|聚|凝)", text)
+    if finisher and not windup:
+        warn("P31 终结起势", "写了终结类招式却没有可见起势；补蓄力、锁定或光形收缩")
+    elif finisher:
+        ok("P31 终结起势", "终结技有可见起势")
+
     # 13. 武戏特效层：写打斗就必须把特效写成物件，不能只写动作
     is_fight = bool(method) or bool(re.search(r"法相|招式名|喊出|必杀技|光形", text))
     if is_fight:
@@ -714,6 +744,18 @@ non_diegetic_music:
 
     # 每条新检查都要有一个反例，否则就是"看起来查了、其实没查"
     cases = [
+        ("命中没有受力结果必须提示",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 他一掌击中对手胸口。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, None, lambda r: any(l == "WARN" and "P30" in g for l, g, _ in r)),
+        ("命中带受力结果不应提示",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 他一掌击中对手胸口，对手倒滑三米撞上砖墙。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, None, lambda r: not any(l != "PASS" and "P30" in g for l, g, _ in r)),
+        ("终结技缺起势必须提示",
+         "integrated_multimodal_description:\n本段总长约 8 秒。\n[Shot 1] At 00:00.000, 他抬手，最后放大招终结对手。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, None, lambda r: any(l == "WARN" and "P31" in g for l, g, _ in r)),
+        ("正文混进自检表必须提示",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 他起身（自检表：预估 90.8 秒）。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, None, lambda r: any(l == "WARN" and "P29" in g for l, g, _ in r)),
         ("镜内出现「然后」必须提示拆镜",
          "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 他起身，然后转身。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          None, None, lambda r: any(l == "WARN" and "P28" in g for l, g, _ in r)),
