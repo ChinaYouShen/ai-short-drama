@@ -49,6 +49,11 @@ import unicodedata
 # ── 本技能包的枚举与阈值（改这里就等于改规则，别散落在各文件里）──
 SHOT_SIZES = ["大特写", "特写", "近景", "中近景", "中景", "全景", "远景", "大全景"]
 WIDE_BANNED_FOR_PEOPLE = ["远景", "大全景"]
+DEATH_WORDS = ("死亡", "毙命", "气绝", "断气", "尸体", "暴毙", "当场死")
+SEVERE_WORDS = ("见骨", "甲胄切开", "胸甲贯穿", "贯穿胸", "断臂", "断腿", "内脏", "吐血", "血泊", "重伤")
+BLOCK_WORDS = ("挡下", "格挡", "架住", "封住", "卸开", "弹开", "偏转", "闪开", "避开", "擦过", "击空", "落空")
+LAND_WORDS = ("命中", "击中", "打中", "踹中", "劈中", "刺中", "得手", "贯穿", "吃下这一")
+
 CAMERA_MOVES = ["固定机位", "缓慢推近", "缓慢后移", "横向滑轨", "平移", "跟拍", "平摇", "升降", "焦点变化", "变焦"]
 MAX_PEOPLE_IN_SHOT = 3
 SPEECH_CHARS_PER_SEC = 4.1      # 中文可发声字/秒，取慢的一端
@@ -650,6 +655,29 @@ def check_prompt(text, names, method=None):
     elif finisher:
         ok("P31 终结起势", "终结技有可见起势")
 
+    # 12.9 破坏后果只在命中后生效：没打中不许写重伤，挡住只写格挡特效
+    cond_hit, cond_block = [], []
+    for ln in shot_lines:
+        severe = [w for w in DEATH_WORDS + SEVERE_WORDS if w in ln]
+        if not severe:
+            continue
+        m = re.match(r"\[Shot\s+(\d+)\]", ln.lstrip())
+        no = m.group(1) if m else "?"
+        blocked = any(w in ln for w in BLOCK_WORDS)
+        landed = any(w in ln for w in LAND_WORDS)
+        if blocked:
+            cond_block.append("%s（%s）" % (no, "、".join(sorted(set(severe)))))
+        elif not landed:
+            cond_hit.append("%s（%s）" % (no, "、".join(sorted(set(severe)))))
+    if cond_block:
+        bad("P32 破坏条件", "第 %s 镜既写被挡下又写重伤或死亡；挡住只写格挡特效——接触点火花、"
+            "光幕裂开、兵器弯折、后退半步，人身上不落伤" % "、".join(cond_block))
+    elif cond_hit:
+        warn("P32 破坏条件", "第 %s 镜写了重伤或死亡却没有命中依据；先写命中，再写后果，"
+            "没打中只写落空痕迹" % "、".join(cond_hit))
+    else:
+        ok("P32 破坏条件", "重伤与死亡都挂在命中之后")
+
     # 13. 武戏特效层：写打斗就必须把特效写成物件，不能只写动作
     is_fight = bool(method) or bool(re.search(r"法相|招式名|喊出|必杀技|光形", text))
     if is_fight:
@@ -774,6 +802,15 @@ non_diegetic_music:
         ("终结技缺起势必须提示",
          "integrated_multimodal_description:\n本段总长约 8 秒。\n[Shot 1] At 00:00.000, 他抬手，最后放大招终结对手。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          None, None, lambda r: any(l == "WARN" and "P31" in g for l, g, _ in r)),
+        ("写了死亡却没写命中必须提示",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 他一掌拍出，对手当场死亡。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, None, lambda r: any(l == "WARN" and "P32" in g for l, g, _ in r)),
+        ("挡住却写断臂必须拦下",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 对手横刀挡下这一剑，手臂当场断臂见骨。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, "P32 破坏条件", None),
+        ("命中后写重伤必须放行",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 剑光刺中胸口，甲片崩开见骨，人倒滑两米。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, None, lambda r: not any(l != "PASS" and "P32" in g for l, g, _ in r)),
         ("正文混进自检表必须提示",
          "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 他起身（自检表：预估 90.8 秒）。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          None, None, lambda r: any(l == "WARN" and "P29" in g for l, g, _ in r)),

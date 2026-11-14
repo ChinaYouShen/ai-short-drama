@@ -124,6 +124,10 @@ def check_damage(path, header_word, damage_col="破坏（人／物／景）", ex
             why = _looks_destroyed(cells[idx])
             if why:
                 issues.append((cells[0], why))
+            death = [w for w in ("死亡", "毙命", "气绝", "断气", "暴毙") if w in cells[idx]]
+            if death:
+                issues.append((cells[0], "参数表里写了「%s」；表只写命中后的破坏上限，生死属剧情结果，"
+                                "放进分镜并加命中条件" % "、".join(death)))
     if not seen_col and not issues:
         issues.append((path.split("/")[-1], "破坏列「%s」未匹配到任何行" % damage_col))
     return issues
