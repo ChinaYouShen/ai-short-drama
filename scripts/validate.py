@@ -605,6 +605,15 @@ def check_prompt(text, names, method=None):
         ok("P24 素材上限", "图 %d、视频 %d、音频 %d，合计 %d 个，在接口上限内"
            % (len(pic_nums), len(vid_nums), len(aud_nums), total))
 
+    # 12.5 一镜一动作：镜内出现「然后／接着」等串行动词，等于一镜塞了两件事
+    shot_lines = [ln for ln in text.splitlines() if ln.lstrip().startswith("[Shot")]
+    split_words = re.findall(r"(然后|接着|随后|紧接着|再然后)", "\n".join(shot_lines))
+    if split_words:
+        warn("P28 一镜一动作", "镜内出现 %s；一镜只放一个连续动作，串行动作请拆成两镜"
+             % "、".join(sorted(set(split_words))))
+    else:
+        ok("P28 一镜一动作", "镜内没有串行动词")
+
     # 13. 武戏特效层：写打斗就必须把特效写成物件，不能只写动作
     is_fight = bool(method) or bool(re.search(r"法相|招式名|喊出|必杀技|光形", text))
     if is_fight:
@@ -705,6 +714,12 @@ non_diegetic_music:
 
     # 每条新检查都要有一个反例，否则就是"看起来查了、其实没查"
     cases = [
+        ("镜内出现「然后」必须提示拆镜",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 他起身，然后转身。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, None, lambda r: any(l == "WARN" and "P28" in g for l, g, _ in r)),
+        ("一镜一动作不应被提示",
+         "integrated_multimodal_description:\n本段总长约 6 秒。\n[Shot 1] At 00:00.000, 他起身，转身出画。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
+         None, None, lambda r: not any("P28" in g and l != "PASS" for l, g, _ in r)),
         ("多段合计与全片声明不符必须拦下",
          "integrated_multimodal_description:\n全片总长约 20 秒。\n本段总长约 8 秒。\n[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:03.000, 特写。\noverall_soundscape:\nx\nnon_diegetic_music:\ny\n\nintegrated_multimodal_description:\n本段总长约 10 秒。\n[Shot 1] At 00:00.000, 近景。\n[Shot 2] At 00:03.000, 特写。\noverall_soundscape:\nx\nnon_diegetic_music:\ny",
          None, "P27 多段时间轴", None),
