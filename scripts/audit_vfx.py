@@ -9,6 +9,7 @@
 2. 长度 ≥ 8 字，避免只写「线状」「面状掌印」这种形状名。
 3. 含体量或轨迹线索：数字、「长约/高约/直径」、或运动动词（贯穿、推进、盘旋、收束…）。
 4. 同一文件内不与其他招式完全重复（同体系多招共用一套特效，观众分不出是哪招）。
+5. 表头关键词必须真的匹配到行；匹配不到即报错，不允许静默跳过（否则整份文件等于没查）。
 """
 import glob
 import os
@@ -24,9 +25,9 @@ TABLES = [
     ("references/wuxi/catalog/jinyong/shediao.md", "能源形态", 0, 2),
     ("references/wuxi/catalog/jinyong/tianlong.md", "能源形态", 0, 2),
     ("references/wuxi/catalog/jinyong/xiaoao.md", "能源形态", 0, 2),
-    ("references/wuxi/catalog/gulong.md", "能源形态", 0, 2),
-    ("references/wuxi/catalog/liangyusheng.md", "能源形态", 0, 2),
-    ("references/wuxi/catalog/wenyuan.md", "能源形态", 0, 2),
+    ("references/wuxi/catalog/gulong.md", "光形 / 粒子", 0, 2),
+    ("references/wuxi/catalog/liangyusheng.md", "光形 / 粒子", 0, 2),
+    ("references/wuxi/catalog/wenyuan.md", "光形 / 粒子", 0, 2),
     ("references/wuxi/ultimate/cases/saint-seiya.md", "特效主体与轨迹", 1, 5),
     ("references/wuxi/ultimate/cases/xianglong.md", "龙形动作", 1, 2),
 ]
@@ -94,10 +95,15 @@ def main():
     quiet = "--quiet" in sys.argv
     total_moves = 0
     total_issues = 0
+    broken = []
     for path, hw, mc, vc in TABLES:
         data = rows(path, hw, mc, vc)
         if data is None:
             print("跳过（文件不存在）：", path)
+            continue
+        if not data:
+            # 表头关键词对不上就是零条：以前会静默放行，等于这一份文件没查
+            broken.append((path, hw))
             continue
         total_moves += len(data)
         issues = check(path, hw, mc, vc)
@@ -110,6 +116,10 @@ def main():
                     print("   - %s：%s" % (move, why))
         else:
             print("✓ %s（%d 条）全部有特效主体" % (name, len(data)))
+    if broken:
+        for path, hw in broken:
+            print("✗ %s：表头「%s」未匹配到任何行，这份文件等于没查" % (path.split("/")[-1], hw))
+        total_issues += len(broken)
     print("合计：%d 条招式，%d 处问题" % (total_moves, total_issues))
     return 1 if total_issues else 0
 
