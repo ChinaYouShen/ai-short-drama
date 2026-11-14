@@ -867,8 +867,44 @@ non_diegetic_music:
     if counts["FAIL"]:
         print("自检未通过：", counts)
         return 1
+
+    # 文档同步：脚本里在用的 P 编号，必须与 validation.md 的条目一一对应
+    drift = check_doc_sync()
+    if drift:
+        print("自检未通过：文档与校验项不同步 —— %s" % "；".join(drift))
+        return 1
+    counts["PASS"] += 1
     print("自检通过：", counts)
     return 0
+
+
+def check_doc_sync():
+    """比对 validate.py 内实际调用的 P 编号与 validation.md 里登记的条目。
+
+    校验项靠人记一定会漏：加了检查忘了写文档，用户照着文档写就会漏规则。
+    这里只做一件事——两边的编号集合必须完全相等。
+    """
+    import os
+    here = os.path.dirname(os.path.abspath(__file__))
+    root = os.path.dirname(here)
+    doc = os.path.join(root, "references", "wuxi", "validation.md")
+    if not os.path.exists(doc):
+        return ["找不到 references/wuxi/validation.md"]
+    with open(__file__, encoding="utf-8") as f:
+        code = f.read()
+    with open(doc, encoding="utf-8") as f:
+        text = f.read()
+    used = set(re.findall(r'"(P\d+)\s[^"]*"', code))
+    used |= set(re.findall(r'"(P\d+)', code))
+    documented = set(re.findall(r"P\d+", text))
+    issues = []
+    missing = sorted(used - documented)
+    extra = sorted(documented - used)
+    if missing:
+        issues.append("脚本有、文档没写：%s" % "、".join(missing))
+    if extra:
+        issues.append("文档有、脚本没有：%s" % "、".join(extra))
+    return issues
 
 
 def main():
