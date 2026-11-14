@@ -4,7 +4,7 @@
 用法：python3 scripts/audit_vfx.py [--quiet]
 退出码 0 表示全部合格，1 表示有问题。
 
-判定一个条目合格的四条：
+判定一个条目合格的四条（外加破坏三栏，见 check_damage）：
 1. 非空，且不以「无」「没有」开头（无光招式也必须给空气锥、尘环这类可见物件）。
 2. 长度 ≥ 8 字，避免只写「线状」「面状掌印」这种形状名。
 3. 含体量或轨迹线索：数字、「长约/高约/直径」、或运动动词（贯穿、推进、盘旋、收束…）。
@@ -63,6 +63,70 @@ def _blocks(lines):
             continue
         out.append((b[0], b[1], b[2:]))
     return out
+
+
+def _col_index(header, name):
+    cells = _cells(header)
+    for i, c in enumerate(cells):
+        if c == name:
+            return i
+    return None
+
+
+def _looks_destroyed(text):
+    """破坏三栏：人：…／物：…／景：… 三段都要有具体后果，不许只写「轰然」「碎裂」这种空词。"""
+    if not text:
+        return "空字段"
+    parts = text.replace("|", "／").split("／")
+    labels = {"人": False, "物": False, "景": False}
+    bodies = {}
+    for part in parts:
+        part = part.strip()
+        for k in labels:
+            if part.startswith(k + "："):
+                labels[k] = True
+                bodies[k] = part.split("：", 1)[1].strip()
+    missing = [k for k, v in labels.items() if not v]
+    if missing:
+        return "缺「%s」这一栏" % "、".join(missing)
+    if all(v in ("无", "无。", "不适用") for v in bodies.values()):
+        return "三栏全写「无」，等于没写破坏"
+    thin = [k for k, v in bodies.items() if v not in ("无", "无。", "不适用") and len(v) < 3]
+    if thin:
+        return "「%s」只写了两个字，没有具体后果" % "、".join(thin)
+    return None
+
+
+def check_damage(path, header_word, damage_col="破坏（人／物／景）", extra=()):
+    full = os.path.join(ROOT, path)
+    if not os.path.exists(full):
+        return []
+    issues, seen_col, total = [], False, 0
+    for header, _sep, data in _blocks(open(full, encoding="utf-8").read().splitlines()):
+        if header_word not in header:
+            continue
+        cells_h = _cells(header)
+        idx = _col_index(header, damage_col)
+        if idx is None:
+            for name in extra:
+                if name not in cells_h:
+                    issues.append((path.split("/")[-1], "表头没有「%s」，破坏后果无处可写" % name))
+                else:
+                    seen_col = True
+            continue
+        seen_col = True
+        n = len(cells_h)
+        for line in data:
+            cells = _cells(line)
+            if len(cells) != n:
+                continue
+            total += 1
+            why = _looks_destroyed(cells[idx])
+            if why:
+                issues.append((cells[0], why))
+    if not seen_col and not issues:
+        issues.append((path.split("/")[-1], "破坏列「%s」未匹配到任何行" % damage_col))
+    return issues
 
 
 def _cells(line):
@@ -161,6 +225,22 @@ def main():
                     print("   - %s：%s" % (move, why))
         else:
             print("✓ %s（%d 条）全部有特效主体" % (name, len(data)))
+    DAMAGE = [
+        ("references/wuxi/catalog/jinyong/misc-early.md", "能源形态", "破坏（人／物／景）", ()),
+        ("references/wuxi/catalog/jinyong/misc-mid.md", "能源形态", "破坏（人／物／景）", ()),
+        ("references/wuxi/catalog/jinyong/shediao.md", "能源形态", "破坏（人／物／景）", ()),
+        ("references/wuxi/catalog/jinyong/tianlong.md", "能源形态", "破坏（人／物／景）", ()),
+        ("references/wuxi/catalog/jinyong/xiaoao.md", "能源形态", "破坏（人／物／景）", ()),
+        ("references/wuxi/catalog/gulong.md", "能源形态", "破坏（人／物／景）", ()),
+        ("references/wuxi/catalog/liangyusheng.md", "能源形态", "破坏（人／物／景）", ()),
+        ("references/wuxi/catalog/wenyuan.md", "能源形态", "破坏（人／物／景）", ()),
+        ("references/wuxi/ultimate/cases/saint-seiya.md", "特效主体与轨迹", "破坏（人／物／景）", ()),
+        ("references/wuxi/catalog/gulong.md", "光形 / 粒子", None, ("命中", "环境")),
+        ("references/wuxi/catalog/liangyusheng.md", "光形 / 粒子", None, ("命中", "环境")),
+        ("references/wuxi/catalog/wenyuan.md", "光形 / 粒子", None, ("命中", "环境")),
+        ("references/wuxi/ultimate/cases/xianglong.md", "龙形动作", None, ("命中反馈", "环境反应")),
+    ]
+
     for path, ikw, mkw in CROSS:
         idx = names_by(path, ikw)
         mov = names_by(path, mkw)
@@ -172,6 +252,15 @@ def main():
             print("✗ %s：索引表与招式表名单不一致（只在索引：%s；只在招式表：%s）"
                   % (path.split("/")[-1], "、".join(only_i) or "无", "、".join(only_m) or "无"))
             total_issues += 1
+
+    for path, hw, dcol, extra in DAMAGE:
+        iss = check_damage(path, hw, dcol, extra) if dcol else check_damage(path, hw, "破坏（人／物／景）", extra)
+        if iss:
+            print("✗ %s：破坏三栏 %d 处问题" % (path.split("/")[-1], len(iss)))
+            if not quiet:
+                for who, why in iss[:12]:
+                    print("   - %s：%s" % (who, why))
+            total_issues += len(iss)
 
     if broken:
         for path, hw in broken:
