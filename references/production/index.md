@@ -20,6 +20,10 @@
 | 建立、修改或检查选题 | [topic.md](topic.md) |
 | 建立、拆解或检查故事大纲 | [outline.md](outline.md) |
 | 检查单集节奏、钩子、爽点密度、集末留扣 | [rhythm.md](rhythm.md) |
+| 设计或检查集尾钩子、付费卡点、断章与反转 | [hooks.md](hooks.md) |
+| 写、删、诊断对白（容量·身份·潜台词） | [dialogue.md](dialogue.md) |
+| 审稿打分，只要报告或按范围修 | [review.md](review.md) |
+| 开工前算生成次数、素材与关卡 | [cost.md](cost.md) |
 | 修「换镜头就换脸」、定妆图与空景板、五镜验收 | [consistency.md](consistency.md) |
 | 创建、补全或检查人物卡 | [characters.md](characters.md) |
 | 道具、场景、站位卡及缺项检查 | [assets.md](assets.md) |

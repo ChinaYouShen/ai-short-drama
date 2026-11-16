@@ -11,7 +11,6 @@
 ## 作者与来源
 
 - 作者：[**酉神**](https://space.bilibili.com/429513806?spm_id_from=333.1007.0.0)（B 站：酉神已退休）
-- 武戏模块的思路参考自 B 站 UP 主 [**黄色大宝剑**](https://space.bilibili.com/296119304?spm_id_from=333.337.0.0)，此处仅借鉴其创作思路并重新整理成结构化规则，特此致谢；如涉及其原创内容权益，请联系作者处理。
 - 作者的其他作品（B 站）：[小说转短剧](https://www.bilibili.com/video/BV1KGnP6VE3X/?vd_source=ffbe4e3e8cfc219ba76f5897625a9887) · [抖音场控](https://www.bilibili.com/video/BV1v7G96CE3H/?vd_source=ffbe4e3e8cfc219ba76f5897625a9887) · [AI 小说过检测](https://www.bilibili.com/video/BV1ydA7zUEuB/?vd_source=ffbe4e3e8cfc219ba76f5897625a9887)
 - 感谢所有在短剧、漫剧与 AI 视频提示词领域公开分享经验的中文创作者。
 
@@ -44,7 +43,8 @@ ai-short-drama/
     ├── h3-format.md            # MiniMax H3 字段与参考标签规范
     ├── optimization.md         # 已有提示词的优化流程与不可生成写法清单
     ├── models-compare.md       # 跨模型对照：时长档位·素材上限·声音字段·换模型改三处
-    ├── production/             # 选题·大纲·节奏·一致性·多段拼接·平台发行·人物·场景·道具·站位·剧本·分镜·图片·漫剧·小说改编
+    ├── production/             # 选题·大纲·节奏·钩子·对白·审稿·预算·一致性·多段拼接·平台发行·人物·场景·道具·剧本·分镜·图片·漫剧·小说改编
+    │   └── capability-map.md   # 十二域能力矩阵：每个环节挂到具体文件，未覆盖项如实登记
     ├── wenxi/                  # 文戏：对白·表演·关系·多人调度·风格·分镜
     └── wuxi/                   # 武戏：动作导演·招式·位移·兵器·能力·可生成性·连续性·分镜
         ├── action-directing.md  # 动作导演：角色动作档案·交锋因果·状态延续·配速预算·素材职责·净稿
@@ -61,6 +61,7 @@ ai-short-drama/
 | 支持哪些 agent | 任何读 SKILL.md 的 agent；接入写法见 `adapters/`（含 WorkBuddy、Codex、Cursor、豆包、文心等） |
 | 什么语言 | 中文写正文、英文字段名；出海可直接改成英文正文 |
 | 能不能商用 | GPL-3.0：可商用、可修改，衍生作品同样开源 |
+| 覆盖到哪 | 十二个能力域（选题→剧本→对白→钩子→审稿→分镜→提示词→武戏→预算→交付），边界见 `references/production/capability-map.md` |
 | 还维护吗 | 自检 20 项常绿（含文档同步检查）、221 条招式特效与破坏体检 0 问题，每次改动都跑门禁并同步文档 |
 
 ## 快速开始

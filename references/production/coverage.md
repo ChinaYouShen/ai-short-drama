@@ -1,6 +1,6 @@
 # 能力覆盖清单
 
-以下 56 项均有可调用模块；同类规则经过重新组织，语言和版式作为用户可选项。编号仅用于核对能力范围，不代表执行顺序。
+以下 62 项均有可调用模块；同类规则经过重新组织，语言和版式作为用户可选项。编号仅用于核对能力范围，不代表执行顺序。
 
 1. 创作故事大纲 → [outline.md](outline.md)
 2. 对照原文检查大纲 → [outline.md](outline.md)
@@ -59,5 +59,10 @@
 55. 分类选型的逐层下钻与返回上一步 → [../wuxi/catalog/select.md](../wuxi/catalog/select.md)
 56. 金庸十五部作品的全部带特效武学谱（分卷·三档分级·逐门参数） → [../wuxi/catalog/jinyong/index.md](../wuxi/catalog/jinyong/index.md)
 57. 小说正文转分镜剧本（信息提取·人物卡声线·场景卡·10～15 秒单元·双层台词预算·六步输出） → [adapt.md](adapt.md)
+58. 对白容量·身份三件套·问答错位·删水词 → [dialogue.md](dialogue.md)
+59. 集尾七型钩子·卡点位置·断章三式·反转三式·承诺账 → [hooks.md](hooks.md)
+60. 剧本审稿 24 条判据与五维打分 → [review.md](review.md)
+61. 生成预算·素材上限换算·四个确认关卡·止损规则 → [cost.md](cost.md)
+62. 十二域能力矩阵与未覆盖项登记 → [capability-map.md](capability-map.md)
 
 每次只加载当前产物需要的模块；用户可以跳过列表中的任何阶段。
