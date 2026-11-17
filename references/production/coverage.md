@@ -1,6 +1,6 @@
 # 能力覆盖清单
 
-以下 62 项均有可调用模块；同类规则经过重新组织，语言和版式作为用户可选项。编号仅用于核对能力范围，不代表执行顺序。
+以下 67 项均有可调用模块；同类规则经过重新组织，语言和版式作为用户可选项。编号仅用于核对能力范围，不代表执行顺序。
 
 1. 创作故事大纲 → [outline.md](outline.md)
 2. 对照原文检查大纲 → [outline.md](outline.md)
@@ -63,6 +63,11 @@
 59. 集尾七型钩子·卡点位置·断章三式·反转三式·承诺账 → [hooks.md](hooks.md)
 60. 剧本审稿 24 条判据与五维打分 → [review.md](review.md)
 61. 生成预算·素材上限换算·四个确认关卡·止损规则 → [cost.md](cost.md)
-62. 十二域能力矩阵与未覆盖项登记 → [capability-map.md](capability-map.md)
+62. 十三域能力矩阵与未覆盖项登记 → [capability-map.md](capability-map.md)
+63. 单点诊断：三种解释·原文检验·最小改动·判不用改 → [review.md](review.md)
+64. 开拍前一镜九问契约 → [storyboard.md](storyboard.md)
+65. 跨镜承接四机制（尾帧·首帧·三视图·编号资产） → [consistency.md](consistency.md)
+66. 按镜头类型分派视频模型 → [../models-compare.md](../models-compare.md)
+67. 参考片反拆：剧情纲要·逐镜表·风格指南 → [reverse.md](reverse.md)
 
 每次只加载当前产物需要的模块；用户可以跳过列表中的任何阶段。

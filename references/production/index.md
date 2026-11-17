@@ -23,6 +23,8 @@
 | 设计或检查集尾钩子、付费卡点、断章与反转 | [hooks.md](hooks.md) |
 | 写、删、诊断对白（容量·身份·潜台词） | [dialogue.md](dialogue.md) |
 | 审稿打分，只要报告或按范围修 | [review.md](review.md) |
+| 只诊断某一处该不该改，不要通篇重写 | [review.md](review.md) |
+| 从参考片或旧片反拆剧情、逐镜与风格 | [reverse.md](reverse.md) |
 | 开工前算生成次数、素材与关卡 | [cost.md](cost.md) |
 | 修「换镜头就换脸」、定妆图与空景板、五镜验收 | [consistency.md](consistency.md) |
 | 创建、补全或检查人物卡 | [characters.md](characters.md) |
@@ -31,6 +33,7 @@
 | 创作或检查漫剧剧本与分镜 | [manju.md](manju.md) |
 | 小说正文转 10～15 秒单元的分镜剧本 | [adapt.md](adapt.md) |
 | 新建、补充、修改或检查短剧分镜 | [storyboard.md](storyboard.md) |
+| 写提示词前先定这一镜的九问契约 | [storyboard.md](storyboard.md) |
 | 人物、道具、场景、站位、分镜静帧图片提示词 | [images/index.md](images/index.md) |
 | MiniMax H3 文戏或武戏视频提示词 | [../h3-format.md](../h3-format.md) 和对应戏型索引 |
 | 多集作品的跨集连续性台账 | [../../templates/continuity-ledger.md](../../templates/continuity-ledger.md) |
