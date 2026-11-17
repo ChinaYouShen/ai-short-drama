@@ -28,8 +28,8 @@ TABLES = [
     ("references/wuxi/catalog/gulong.md", "光形 / 粒子", 0, 2, None),
     ("references/wuxi/catalog/liangyusheng.md", "光形 / 粒子", 0, 2, None),
     ("references/wuxi/catalog/wenyuan.md", "光形 / 粒子", 0, 2, None),
-    ("references/wuxi/ultimate/cases/saint-seiya.md", "特效主体与轨迹", 1, 6, 3),
-    ("references/wuxi/ultimate/cases/xianglong.md", "龙形动作", 1, 2, 7),
+    ("references/wuxi/cases/saint-seiya.md", "特效主体与轨迹", 1, 6, 3),
+    ("references/wuxi/cases/xianglong.md", "龙形动作", 1, 2, 7),
 ]
 
 MOTION = ("贯穿", "推进", "盘旋", "收束", "扩散", "合拢", "塌缩", "下压", "横扫", "折返",
@@ -238,11 +238,11 @@ def main():
         ("references/wuxi/catalog/gulong.md", "能源形态", "破坏（人／物／景）", ()),
         ("references/wuxi/catalog/liangyusheng.md", "能源形态", "破坏（人／物／景）", ()),
         ("references/wuxi/catalog/wenyuan.md", "能源形态", "破坏（人／物／景）", ()),
-        ("references/wuxi/ultimate/cases/saint-seiya.md", "特效主体与轨迹", "破坏（人／物／景）", ()),
+        ("references/wuxi/cases/saint-seiya.md", "特效主体与轨迹", "破坏（人／物／景）", ()),
         ("references/wuxi/catalog/gulong.md", "光形 / 粒子", None, ("命中", "环境")),
         ("references/wuxi/catalog/liangyusheng.md", "光形 / 粒子", None, ("命中", "环境")),
         ("references/wuxi/catalog/wenyuan.md", "光形 / 粒子", None, ("命中", "环境")),
-        ("references/wuxi/ultimate/cases/xianglong.md", "龙形动作", None, ("命中反馈", "环境反应")),
+        ("references/wuxi/cases/xianglong.md", "龙形动作", None, ("命中反馈", "环境反应")),
     ]
 
     for path, ikw, mkw in CROSS:
