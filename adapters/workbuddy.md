@@ -33,7 +33,7 @@ WorkBuddy 用 **@技能名** 唤起，不是斜杠命令：
 - 必杀技 → `references/wuxi/vfx.md`
 - 体系选择 → `references/wuxi/catalog/index.md`
 - H3 格式与素材绑定 → `references/prompt.md`
-- 小说改编 → `references/guide.md`
+- 小说改编 → `references/adapt.md`
 
 `/选题`、`/大纲`、`/人物`、`/道具`、`/场景`、`/站位`、`/剧本`、`/分镜`、`/图片`、`/漫剧`、`/文戏`、`/武戏`、`/必杀技`、`/武戏体系`、`/H3` 这些斜杠前缀按**首段文本**识别，不依赖客户端命令注册。
 

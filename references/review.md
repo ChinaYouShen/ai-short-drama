@@ -2,7 +2,7 @@
 
 ## 剧本审稿：24 条判据与五维打分
 
-审稿只做两件事：找问题、按授权修。用户只要报告时不改稿；用户要求修时只修指定范围。写作规则见 [script.md](guide.md)，对白细则见 [dialogue.md](guide.md)，钩子见 [hooks.md](guide.md)。
+审稿只做两件事：找问题、按授权修。用户只要报告时不改稿；用户要求修时只修指定范围。写作规则见 [script.md](story.md)，对白细则见 [dialogue.md](story.md)，钩子见 [hooks.md](story.md)。
 
 ## 一、结构 8 条
 

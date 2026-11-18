@@ -1,6 +1,6 @@
 # 通用智能体入口
 
-本包的唯一规则源是上一级 `SKILL.md`。加载本入口时，先读取根入口，再按用户选择读取 `references/guide.md`、`references/prompt.md`、`references/prompt.md`、`references/wuxi/rules.md` 或 `references/prompt.md`；选择文戏时继续读取 `references/wenxi/rules.md` 和索引指定的模块，选择武戏时继续读取 `references/wuxi/rules.md` 和索引指定的模块。
+本包的唯一规则源是上一级 `SKILL.md`。加载本入口时，先读取根入口，再按用户选择读取 `references/story.md`、`references/prompt.md`、`references/prompt.md`、`references/wuxi/rules.md` 或 `references/prompt.md`；选择文戏时继续读取 `references/wenxi/rules.md` 和索引指定的模块，选择武戏时继续读取 `references/wuxi/rules.md` 和索引指定的模块。
 
 消息首段可以使用 `/AI生成短剧` 进入总路由，或使用 `/选题`、`/大纲`、`/人物`、`/道具`、`/场景`、`/站位`、`/剧本`、`/分镜`、`/图片`、`/漫剧`、`/文戏`、`/武戏`、`/H3` 直接进入对应模块。斜杠前缀按文本识别，不依赖客户端命令注册。
 

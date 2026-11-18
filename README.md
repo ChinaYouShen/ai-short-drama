@@ -24,7 +24,8 @@
 
 | 你要什么 | 读哪个 |
 | --- | --- |
-| 选题到大纲、剧本、对白、钩子、改编、漫剧、反拆参考片 | `references/guide.md` |
+| 选题、大纲、人物、剧本、对白、钩子、节奏 | `references/story.md` |
+| 小说改编、漫剧、反拆参考片、分批验收 | `references/adapt.md` |
 | 挑毛病、打分、诊断一处 | `references/review.md` |
 | 分镜、镜头九问、承接、图片提示词 | `references/board.md` |
 | H3 提示词、模型对照、多段拼接 | `references/prompt.md` |

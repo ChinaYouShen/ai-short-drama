@@ -20,7 +20,8 @@ metadata:
 
 | 用户要什么 | 读哪个 |
 | --- | --- |
-| 选题、大纲、人物、资产、剧本、对白、钩子、节奏、改编、漫剧、参考片反拆 | [references/guide.md](references/guide.md) |
+| 选题、大纲、人物、资产、剧本、对白、钩子、节奏 | [references/story.md](references/story.md) |
+| 小说改编、漫剧、参考片反拆、分批交付 | [references/adapt.md](references/adapt.md) |
 | 挑毛病、打分、诊断某一处该不该改 | [references/review.md](references/review.md) |
 | 分镜、镜头九问、跨镜承接、图片提示词 | [references/board.md](references/board.md) |
 | H3 文戏武戏提示词、模型对照、多段拼接、镜头语言 | [references/prompt.md](references/prompt.md) |

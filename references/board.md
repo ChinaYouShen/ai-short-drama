@@ -101,8 +101,8 @@
 
 三层怎么落到我们的文件：
 
-- 定妆图提示词 → images/frame.md、[characters.md](guide.md)
-- 场景空景板 → [assets.md](guide.md)、images/frame.md
+- 定妆图提示词 → images/frame.md、[characters.md](story.md)
+- 场景空景板 → [assets.md](story.md)、images/frame.md
 - 分镜承接与段内延续 → [分镜](board.md)、[提示词主文件](prompt.md)
 - 台账 → ../../templates/continuity-ledger.md
 
@@ -234,7 +234,7 @@
 - 需要展示结构时分区描述外观、细节和材质；不把服装、发型、妆面或脸当作道具。
 - 用户提供的参考图按原编号绑定，不新增图号。
 
-输出可直接用于出图的 `prompt` 和必要的 `negativePrompt`。如果用户只要求道具信息卡，则调用 [../assets.md](guide.md)，不生成图片提示词。
+输出可直接用于出图的 `prompt` 和必要的 `negativePrompt`。如果用户只要求道具信息卡，则调用 [../assets.md](story.md)，不生成图片提示词。
 
 ### 站位主图
 
