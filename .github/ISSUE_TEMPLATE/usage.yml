@@ -1,0 +1,29 @@
+name: 使用回执
+description: 用了这套包，留一句你拿它做了什么（不采集任何数据，纯自愿）
+title: "[使用回执] "
+labels: ["usage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        这一条不是必填，也不会上报任何信息。你写一句，别人就知道这套包在什么场景里真的能用。
+  - type: input
+    id: scene
+    attributes:
+      label: 用它做了什么
+      description: 一句话就够，例如「20 集都市复仇，主要用武戏和分镜」
+      placeholder: 20 集都市复仇，主要用武戏和分镜
+    validations:
+      required: true
+  - type: input
+    id: stack
+    attributes:
+      label: 跑在哪个平台
+      description: 豆包 / Cursor / Codex / WorkBuddy / 其他
+      placeholder: Cursor
+  - type: textarea
+    id: notes
+    attributes:
+      label: 哪里好用、哪里卡住（可选）
+      description: 卡住的地方最有价值，我会照着改
+      placeholder: 招式选到门派之后想再退回换一类，找不到入口

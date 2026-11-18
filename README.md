@@ -50,6 +50,13 @@ python3 scripts/check.py
 
 一条命令跑完自检、样例、221 招体检与文档断链，零依赖。
 
+## 用了就留一句
+
+这套包没有埋点、不采集数据。想知道它在什么场景里真的能用，靠的是使用者自愿留一句：
+
+- 点个 Star，让后来的人知道有人用过
+- 或留一条[使用回执](https://github.com/ChinaYouShen/ai-short-drama/issues/new?template=usage.yml)：一句话说你拿它做了什么，卡住的地方也写上
+
 ## 作者
 
 酉神（B 站：酉神已退休）
