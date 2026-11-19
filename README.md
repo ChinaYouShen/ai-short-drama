@@ -61,3 +61,13 @@ python3 scripts/check.py
 ## 作者
 
 酉神（B 站：酉神已退休）
+
+## 配套
+
+- 在线目录与安装说明：[短剧提示词技能包](https://www.fzgcwl.com/short-drama-skill.html)
+- 五个环节各写了一篇，按需看：
+  [选题与大纲](https://www.fzgcwl.com/guide-short-drama-topic.html) ·
+  [分镜提示词](https://www.fzgcwl.com/guide-short-drama-storyboard.html) ·
+  [武戏](https://www.fzgcwl.com/guide-short-drama-wuxi.html) ·
+  [必杀技](https://www.fzgcwl.com/guide-short-drama-ultimate.html) ·
+  [H3 格式](https://www.fzgcwl.com/guide-h3-prompt.html)
