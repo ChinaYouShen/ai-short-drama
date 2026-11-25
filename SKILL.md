@@ -16,6 +16,10 @@ metadata:
 2. **缺环直说**。没有对应文件就说「这块没覆盖」，不用通用话术糊过去。
 3. **不确定就只问一句**。只问会造成错误的缺项，一次问清，不追问风格偏好。
 
+## 开工前先填一张单
+
+第一次接活，先按 [templates/brief.md](templates/brief.md) 问清四项：这次交什么、目标模型是什么、画幅与平台、手上有什么素材。问清再动笔；缺项一次问完，不追问风格偏好。
+
 ## 按任务读一个文件
 
 | 用户要什么 | 读哪个 |
@@ -31,6 +35,7 @@ metadata:
 | 特效总则、三类型五要素、破坏三栏 | [references/wuxi/vfx.md](references/wuxi/vfx.md) |
 | 选门派、选招、查招式参数 | [references/wuxi/catalog/index.md](references/wuxi/catalog/index.md) |
 | 查能力边界与未覆盖项 | [references/map.md](references/map.md) |
+| 分镜与剧本、资产对不对得上 | `scripts/consistency.py`（见下方「交付前自检」） |
 
 一次只读一个入口文件；该文件里再指向需要的子页。不要整包加载。
 
@@ -87,3 +92,11 @@ python3 scripts/check.py
 ```bash
 python3 scripts/validate.py --prompt 我的提示词.txt
 ```
+
+分镜 JSON 与剧本、资产对账：
+
+```bash
+python3 scripts/consistency.py 分镜.json --script 第01集.md
+```
+
+查八项：字段、镜号连续、时间码累加、镜长、台词容量、同框人数、资产引用、台词逐字。少给 `--script` 就只查前七项。

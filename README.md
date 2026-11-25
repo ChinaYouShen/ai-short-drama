@@ -12,6 +12,8 @@
 
 选题 → 大纲 → 人物 → 资产 → 剧本 → 对白 → 钩子 → 审稿 → 分镜 → 提示词 → 武戏 → 预算，任意一环都能单独进入，不必从头跑。
 
+提示词同时覆盖 MiniMax H3 的六段字段和 Seedance 2.5 的四段时间轴：素材绑定、一句话概述、整数秒时间轴、全局约束，换模型时按单改结构，不硬搬。开工前用 `templates/brief.md` 把交付物、模型、平台、素材一次问清；交付前用 `scripts/consistency.py` 把分镜和剧本、资产逐条对账。
+
 武戏是这套包的特色：**每一招都要有一个能画出来的特效主体**（一条金龙、三道爪痕、一面冰墙），规矩写进参数表和检查脚本。现收 221 招：金庸 71、古龙 13、梁羽生 12、温瑞安 7、圣斗士 100、降龙 18。
 
 ## 三步用起来
@@ -30,7 +32,7 @@
 | 小说改编、漫剧、反拆参考片、分批验收 | `references/adapt.md` |
 | 挑毛病、打分、诊断一处 | `references/review.md` |
 | 分镜、镜头九问、承接、图片提示词 | `references/board.md` |
-| H3 提示词、模型对照、多段拼接 | `references/prompt.md` |
+| H3 与 Seedance 2.5 提示词、模型对照、多段拼接 | `references/prompt.md` |
 | 文戏细则 | `references/wenxi/rules.md` |
 | 武戏、特效、选招、参数表 | `references/wuxi/` |
 | 花费、交付关卡、平台口径 | `references/cost.md` |

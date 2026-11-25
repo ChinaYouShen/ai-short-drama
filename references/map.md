@@ -25,9 +25,11 @@
 跨域的四个公共件：
 
 | 公共件 | 作用 | 位置 |
+| 开工单 | 交付物、模型、平台、素材作用，一次问清 | ../../templates/brief.md |
 | 连续性台账 | 伏笔、人物、道具、规则四账 | ../../templates/continuity-ledger.md |
 | 参考素材清单 | 每个素材只承担一种职责 | ../../templates/reference-manifest.md |
 | 机器校验 | 字段、时间码、时长、台词、主色、特效 | ../../scripts/validate.py、../../scripts/audit_vfx.py |
+| 跨文档对账 | 镜号、时间码、镜长、资产引用、台词逐字 | ../../scripts/consistency.py |
 | 平台口径 | 四档变现、开场与结尾公式 | [cost.md](cost.md) |
 
 ## 三条使用原则
