@@ -1,5 +1,17 @@
 # AI 生成短剧技能包（ai-short-drama）
 
+<p align="center">
+  <img src="https://img.shields.io/github/stars/ChinaYouShen/ai-short-drama?style=for-the-badge&logo=github&color=E8C45A" alt="Stars" />
+  <img src="https://img.shields.io/badge/%E7%89%88%E6%9C%AC-v1.8.0-8A2BE2?style=for-the-badge" alt="版本" />
+  <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge" alt="License" />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Language-Chinese-E8C45A?style=for-the-badge" alt="Language" />
+  <img src="https://img.shields.io/badge/%E6%8B%9B%E5%BC%8F-221-F48D73?style=for-the-badge" alt="招式" />
+  <img src="https://img.shields.io/github/last-commit/ChinaYouShen/ai-short-drama?style=for-the-badge&color=blueviolet" alt="最近提交" />
+</p>
+
 给会读文件的 AI 用的一套短剧规矩。它不装软件、不调接口，只负责把你想要的东西写成能直接用的文字和提示词。
 
 如果这个包帮你省了时间，点个 Star 就行，不用别的。
