@@ -18,6 +18,7 @@
 | 八、审稿 | 判据、五维打分、只报告或修正 | [review.md](review.md) | v1.6.0 新增 |
 | 九、分镜 | 镜头表、机位、时长、跨镜承接 | [board.md](board.md) | 已覆盖 |
 | 十、图像与视频提示词 | 静帧、首尾帧、分段、多模型口径 | [story.md](story.md)、[prompt.md](prompt.md)、[prompt.md](prompt.md) | 已覆盖 |
+| 十（补）、运镜选型 | 这一镜怎么动、能不能动、动了会不会打架 | [yunjing.md](yunjing.md) | v1.9.0 新增，70 条 |
 | 十一、武戏与特效 | 招式参数、特效主体、破坏三栏、命中条件 | [wuxi/rules.md](wuxi/rules.md)、references/wuxi/vfx.md | 已覆盖，221 条 |
 | 十二、成片反拆 | 从参考片拆剧情、逐镜与风格 | [story.md](story.md) | v1.6.1 新增 |
 | 十三、预算与交付 | 生成次数、素材上限、确认关卡、止损 | [cost.md](cost.md) | v1.6.0 新增 |

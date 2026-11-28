@@ -29,6 +29,7 @@ metadata:
 | 挑毛病、打分、诊断某一处该不该改 | [references/review.md](references/review.md) |
 | 分镜、镜头九问、跨镜承接、图片提示词 | [references/board.md](references/board.md) |
 | H3 文戏武戏提示词、模型对照、多段拼接、镜头语言 | [references/prompt.md](references/prompt.md) |
+| 这一镜怎么动、运镜能不能叠加、人物入画时哪些不能用 | [references/yunjing.md](references/yunjing.md) |
 | 文戏细则（对白、表演、关系、风格） | [references/wenxi/rules.md](references/wenxi/rules.md) |
 | 算生成次数、素材上限、交付关卡、平台口径 | [references/cost.md](references/cost.md) |
 | 武戏总则、动作配速、画面可生成性 | [references/wuxi/rules.md](references/wuxi/rules.md) |
